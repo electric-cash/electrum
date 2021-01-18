@@ -158,7 +158,7 @@ class ElectricCashMainnet(BitcoinMainnet):
     ADDRTYPE_P2PKH = 33
     ADDRTYPE_P2SH = 87
     SEGWIT_HRP = "elcash"
-    GENESIS = "0000000028ce26975b32feda3d75ac3fe10372f75062366cfba4e934dcc6a48b"
+    GENESIS = "00000000a9811adc411f15a9c525d667ca467d83dc5461e2d7fc791d1d3926de"
     DEFAULT_SERVERS = read_json('servers_elcash.json', {})
     CHECKPOINTS = read_json('checkpoints_elcash.json', [])
     BLOCK_HEIGHT_FIRST_LIGHTNING_CHANNELS = 0
