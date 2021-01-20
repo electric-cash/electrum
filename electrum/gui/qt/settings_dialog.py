@@ -441,7 +441,7 @@ Use this if you want your local watchtower to keep running after you close your 
         tabs_info = [
             (gui_widgets, _('General')),
             (tx_widgets, _('Transactions')),
-            (lightning_widgets, _('Lightning')),
+#            (lightning_widgets, _('Lightning')),
             (fiat_widgets, _('Fiat')),
             (oa_widgets, _('OpenAlias')),
         ]

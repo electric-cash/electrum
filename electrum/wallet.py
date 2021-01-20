@@ -243,7 +243,7 @@ class TxWalletDetails(NamedTuple):
     tx_mined_status: TxMinedInfo
     mempool_depth_bytes: Optional[int]
     can_remove: bool  # whether user should be allowed to delete tx
-    is_lightning_funding_tx: bool
+#    is_lightning_funding_tx: bool
 
 
 class Abstract_Wallet(AddressSynchronizer, ABC):
@@ -312,7 +312,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             for chan_id, chan in self.lnworker.channels.items():
                 channel_backups[chan_id.hex()] = self.lnworker.create_channel_backup(chan_id)
             new_db.put('channels', None)
-            new_db.put('lightning_privkey2', None)
+#            new_db.put('lightning_privkey2', None)
 
         new_path = os.path.join(backup_dir, self.basename() + '.backup')
         new_storage = WalletStorage(new_path)
@@ -329,16 +329,16 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         # we want static_remotekey to be a wallet address
         return self.txin_type == 'p2wpkh'
 
-    def init_lightning(self):
-        assert self.can_have_lightning()
-        if self.db.get('lightning_privkey2'):
-            return
-        # TODO derive this deterministically from wallet.keystore at keystore generation time
-        # probably along a hardened path ( lnd-equivalent would be m/1017'/coinType'/ )
-        seed = os.urandom(32)
-        node = BIP32Node.from_rootseed(seed, xtype='standard')
-        ln_xprv = node.to_xprv()
-        self.db.put('lightning_privkey2', ln_xprv)
+#    def init_lightning(self):
+#        assert self.can_have_lightning()
+#        if self.db.get('lightning_privkey2'):
+#            return
+#        # TODO derive this deterministically from wallet.keystore at keystore generation time
+#        # probably along a hardened path ( lnd-equivalent would be m/1017'/coinType'/ )
+#        seed = os.urandom(32)
+#        node = BIP32Node.from_rootseed(seed, xtype='standard')
+#        ln_xprv = node.to_xprv()
+#        self.db.put('lightning_privkey2', ln_xprv)
 
     def stop(self):
         super().stop()
@@ -568,10 +568,10 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         can_broadcast = False
         can_bump = False
         tx_hash = tx.txid()  # note: txid can be None! e.g. when called from GUI tx dialog
-        is_lightning_funding_tx = False
-        if self.has_lightning() and tx_hash is not None:
-            is_lightning_funding_tx = any([chan.funding_outpoint.txid == tx_hash
-                                           for chan in self.lnworker.channels.values()])
+#        is_lightning_funding_tx = False
+#        if self.has_lightning() and tx_hash is not None:
+#            is_lightning_funding_tx = any([chan.funding_outpoint.txid == tx_hash
+#                                           for chan in self.lnworker.channels.values()])
         tx_we_already_have_in_db = self.db.get_transaction(tx_hash)
         can_save_as_local = (is_relevant and tx.txid() is not None
                              and (tx_we_already_have_in_db is None or not tx_we_already_have_in_db.is_complete()))
@@ -623,8 +623,8 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         else:
             amount = None
 
-        if is_lightning_funding_tx:
-            can_bump = False  # would change txid
+#        if is_lightning_funding_tx:
+#            can_bump = False  # would change txid
 
         return TxWalletDetails(
             txid=tx_hash,
@@ -639,7 +639,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             tx_mined_status=tx_mined_status,
             mempool_depth_bytes=exp_n,
             can_remove=can_remove,
-            is_lightning_funding_tx=is_lightning_funding_tx,
+#            is_lightning_funding_tx=is_lightning_funding_tx,
         )
 
     def get_spendable_coins(self, domain, *, nonlocal_only=False) -> Sequence[PartialTxInput]:
@@ -2497,13 +2497,13 @@ class Deterministic_Wallet(Abstract_Wallet):
         # for a few seconds!
         self.synchronize()
 
-        # create lightning keys
-        if self.can_have_lightning():
-            self.init_lightning()
-        ln_xprv = self.db.get('lightning_privkey2')
-        # lnworker can only be initialized once receiving addresses are available
-        # therefore we instantiate lnworker in DeterministicWallet
-        self.lnworker = LNWallet(self, ln_xprv) if ln_xprv else None
+#        # create lightning keys
+#        if self.can_have_lightning():
+#            self.init_lightning()
+#        ln_xprv = self.db.get('lightning_privkey2')
+#        # lnworker can only be initialized once receiving addresses are available
+#        # therefore we instantiate lnworker in DeterministicWallet
+#        self.lnworker = LNWallet(self, ln_xprv) if ln_xprv else None
 
     def has_seed(self):
         return self.keystore.has_seed()
