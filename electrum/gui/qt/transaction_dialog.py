@@ -513,8 +513,8 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
                 widget.menuAction().setVisible(show_psbt_only_widgets)
             else:
                 widget.setVisible(show_psbt_only_widgets)
-        if tx_details.is_lightning_funding_tx:
-            self._ptx_join_txs_action.setEnabled(False)  # would change txid
+#        if tx_details.is_lightning_funding_tx:
+#            self._ptx_join_txs_action.setEnabled(False)  # would change txid
 
         self.save_button.setEnabled(tx_details.can_save_as_local)
         if tx_details.can_save_as_local:
