@@ -554,9 +554,9 @@ def user_dir():
     elif os.name == 'posix':
         return os.path.join(os.environ["HOME"], ".electrum-cash")
     elif "APPDATA" in os.environ:
-        return os.path.join(os.environ["APPDATA"], "Electrum Cash")
+        return os.path.join(os.environ["APPDATA"], "Elcash Wallet")
     elif "LOCALAPPDATA" in os.environ:
-        return os.path.join(os.environ["LOCALAPPDATA"], "Electrum Cash")
+        return os.path.join(os.environ["LOCALAPPDATA"], "Elcash Wallet")
     else:
         #raise Exception("No home directory found in environment variables.")
         return

@@ -537,7 +537,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             self.setGeometry(100, 100, 840, 400)
 
     def watching_only_changed(self):
-        name = "Electrum Cash Testnet" if constants.net.TESTNET else "Electrum Cash"
+        name = "Elcash Wallet Testnet" if constants.net.TESTNET else "Elcash Wallet"
         title = '%s %s  -  %s' % (name, ELECTRUM_VERSION,
                                         self.wallet.basename())
         extra = [self.wallet.db.get('wallet_type', '?')]
@@ -742,7 +742,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
 
         tools_menu.addAction(_("&Network"), self.gui_object.show_network_dialog).setEnabled(bool(self.network))
 #        tools_menu.addAction(_("&Lightning Network"), self.gui_object.show_lightning_dialog).setEnabled(bool(self.wallet.has_lightning() and self.network))
-        tools_menu.addAction(_("Local &Watchtower"), self.gui_object.show_watchtower_dialog).setEnabled(bool(self.network and self.network.local_watchtower))
+#        tools_menu.addAction(_("Local &Watchtower"), self.gui_object.show_watchtower_dialog).setEnabled(bool(self.network and self.network.local_watchtower))
         tools_menu.addAction(_("&Plugins"), self.plugins_dialog)
         tools_menu.addSeparator()
         tools_menu.addAction(_("&Sign/verify message"), self.sign_verify_message)
@@ -766,21 +766,21 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         help_menu.addSeparator()
         help_menu.addAction(_("&Documentation"), lambda: webopen("http://docs.electrum.org/")).setShortcut(QKeySequence.HelpContents)
         help_menu.addAction(_("&Report Bug"), self.show_report_bug)
-        help_menu.addSeparator()
-        help_menu.addAction(_("&Donate to server"), self.donate_to_server)
+#        help_menu.addSeparator()
+#        help_menu.addAction(_("&Donate to server"), self.donate_to_server)
 
         self.setMenuBar(menubar)
 
-    def donate_to_server(self):
-        d = self.network.get_donation_address()
-        if d:
-            host = self.network.get_parameters().server.host
-            self.pay_to_URI('bitcoin:%s?message=donation for %s'%(d, host))
-        else:
-            self.show_error(_('No donation address for this server'))
+#    def donate_to_server(self):
+#        d = self.network.get_donation_address()
+#        if d:
+#            host = self.network.get_parameters().server.host
+#            self.pay_to_URI('bitcoin:%s?message=donation for %s'%(d, host))
+#        else:
+#            self.show_error(_('No donation address for this server'))
 
     def show_about(self):
-        QMessageBox.about(self, "Electrum Cash",
+        QMessageBox.about(self, "Elcash Wallet",
                           (_("Version")+" %s" % ELECTRUM_VERSION + "\n\n" +
                            _("Electrum's focus is speed, with low resource usage and simplifying Electric Cash.") + " " +
                            _("You do not need to perform regular backups, because your wallet can be "
@@ -839,9 +839,9 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         if self.tray:
             try:
                 # this requires Qt 5.9
-                self.tray.showMessage("Electrum Cash", message, read_QIcon("electrum_dark_icon"), 20000)
+                self.tray.showMessage("Elcash Wallet", message, read_QIcon("electrum_dark_icon"), 20000)
             except TypeError:
-                self.tray.showMessage("Electrum Cash", message, QSystemTrayIcon.Information, 20000)
+                self.tray.showMessage("Elcash Wallet", message, QSystemTrayIcon.Information, 20000)
 
     def timer_actions(self):
         self.request_list.refresh_status()
