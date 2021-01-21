@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME_ROOT=electrum-cash
+NAME_ROOT=elcash-wallet
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
@@ -69,7 +69,7 @@ info "building NSIS installer"
 wine "$WINEPREFIX/drive_c/Program Files (x86)/NSIS/makensis.exe" /DPRODUCT_VERSION=$VERSION electrum.nsi
 
 cd dist
-mv electrum-cash-setup.exe $NAME_ROOT-$VERSION-setup.exe
+mv elcash-wallet-setup.exe $NAME_ROOT-$VERSION-setup.exe
 cd ..
 
 info "Padding binaries to 8-byte boundaries, and fixing COFF image checksum in PE header"
