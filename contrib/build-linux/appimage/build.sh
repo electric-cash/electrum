@@ -101,12 +101,13 @@ info "preparing electrum-locale."
 (
     cd "$PROJECT_ROOT"
     git submodule update --init
+    cp -r ./electrum/locale ./contrib/deterministic-build/electrum-locale/
 
     pushd "$CONTRIB"/deterministic-build/electrum-locale
     if ! which msgfmt > /dev/null 2>&1; then
         fail "Please install gettext"
     fi
-    for i in ./locale/*; do
+    for i in $(find ./locale -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
         dir="$PROJECT_ROOT/electrum/$i/LC_MESSAGES"
         mkdir -p $dir
         msgfmt --output-file="$dir/electrum.mo" "$i/electrum.po" || true
