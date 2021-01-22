@@ -52,6 +52,12 @@ if TYPE_CHECKING:
     from .wallet_db import WalletDB
 
 
+# todo set correct paths
+SEGWIT_DERIVATION_PATH = "m/84'/440'/0'/"
+LEGACY_DERIVATION_PATH = "m/"
+MULTISIG_DERIVATION_PATH = "m/1'/"
+
+
 class CannotDerivePubkey(Exception): pass
 
 
@@ -1048,8 +1054,10 @@ def purpose48_derivation(account_id: int, xtype: str) -> str:
     return normalize_bip32_derivation(der)
 
 
-def from_seed(seed, passphrase, is_p2sh=False):
-    t = seed_type(seed)
+def from_seed(seed, passphrase, is_p2sh=False, seed_type_=None):
+    t = seed_type_
+    if seed_type_ is None:
+        t = seed_type(seed)
     if t == 'old':
         keystore = Old_KeyStore({})
         keystore.add_seed(seed)
@@ -1057,12 +1065,12 @@ def from_seed(seed, passphrase, is_p2sh=False):
         keystore = BIP32_KeyStore({})
         keystore.add_seed(seed)
         keystore.passphrase = passphrase
-        bip32_seed = Mnemonic.mnemonic_to_seed(seed, passphrase)
+        bip32_seed = bip39_to_seed(seed, passphrase)
         if t == 'standard':
-            der = "m/"
+            der = LEGACY_DERIVATION_PATH
             xtype = 'standard'
         else:
-            der = "m/1'/" if is_p2sh else "m/0'/"
+            der = MULTISIG_DERIVATION_PATH if is_p2sh else SEGWIT_DERIVATION_PATH
             xtype = 'p2wsh' if is_p2sh else 'p2wpkh'
         keystore.add_xprv_from_seed(bip32_seed, xtype, der)
     else:
