@@ -46,15 +46,15 @@ def set_language(x):
 
 languages = {
     '': _('Default'),
-    'ar_SA': _('Arabic'),
-    'de_DE': _('German'),
     'en_UK': _('English'),
-    'es_ES': _('Spanish'),
-    'ja_JP': _('Japanese'),
-    'ko_KR': _('Korean'),
-    'pt_PT': _('Portuguese'),
-    'tr_TR': _('Turkish'),
-    'vi_VN': _('Vietnamese'),
-    'zh_CN': _('Chinese Simplified'),
+#    'ar_SA': _('Arabic'),
+#    'de_DE': _('German'),
+#    'es_ES': _('Spanish'),
+#    'ja_JP': _('Japanese'),
+#    'ko_KR': _('Korean'),
+#    'pt_PT': _('Portuguese'),
+#    'tr_TR': _('Turkish'),
+#    'vi_VN': _('Vietnamese'),
+#    'zh_CN': _('Chinese Simplified'),
 
 }
