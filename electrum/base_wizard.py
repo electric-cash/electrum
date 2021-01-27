@@ -515,7 +515,7 @@ class BaseWizard(Logger):
 
     def on_restore_seed(self, seed, is_bip39, is_ext):
         self.seed_type = 'bip39' if is_bip39 else mnemonic.seed_type(seed)
-        if not self.config.get('developr_mode'):
+        if not self.config.get('developer_mode'):
             assert self.seed_type == 'bip39', f'Unsupported seed type {self.seed_type}'
             self.seed_type = 'segwit'
         if self.seed_type == 'bip39':
