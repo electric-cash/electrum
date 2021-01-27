@@ -52,12 +52,6 @@ if TYPE_CHECKING:
     from .wallet_db import WalletDB
 
 
-# todo set correct paths
-SEGWIT_DERIVATION_PATH = "m/84'/440'/0'/"
-LEGACY_DERIVATION_PATH = "m/"
-MULTISIG_DERIVATION_PATH = "m/1'/"
-
-
 class CannotDerivePubkey(Exception): pass
 
 
@@ -935,6 +929,7 @@ def from_bip39_seed(seed, passphrase, derivation, xtype=None):
 PURPOSE48_SCRIPT_TYPES = {
     'p2wsh-p2sh': 1,  # specifically multisig
     'p2wsh': 2,       # specifically multisig
+    'p2sh': 3,
 }
 PURPOSE48_SCRIPT_TYPES_INV = inv_dict(PURPOSE48_SCRIPT_TYPES)
 
@@ -1067,11 +1062,18 @@ def from_seed(seed, passphrase, is_p2sh=False, seed_type_=None):
         keystore.passphrase = passphrase
         bip32_seed = bip39_to_seed(seed, passphrase)
         if t == 'standard':
-            der = LEGACY_DERIVATION_PATH
+            if is_p2sh:
+                der = purpose48_derivation(account_id=0, xtype='p2sh')
+            else:
+                der = bip44_derivation(account_id=0, bip43_purpose=44)
             xtype = 'standard'
         else:
-            der = MULTISIG_DERIVATION_PATH if is_p2sh else SEGWIT_DERIVATION_PATH
-            xtype = 'p2wsh' if is_p2sh else 'p2wpkh'
+            if is_p2sh:
+                xtype = 'p2wsh'
+                der = purpose48_derivation(account_id=0, xtype=xtype)
+            else:
+                der = bip44_derivation(account_id=0, bip43_purpose=84)
+                xtype = 'p2wpkh'
         keystore.add_xprv_from_seed(bip32_seed, xtype, der)
     else:
         raise BitcoinException('Unexpected seed type {}'.format(repr(t)))
