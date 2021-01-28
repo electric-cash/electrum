@@ -766,18 +766,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         help_menu.addSeparator()
         help_menu.addAction(_("&Documentation"), lambda: webopen("http://docs.electrum.org/")).setShortcut(QKeySequence.HelpContents)
         help_menu.addAction(_("&Report Bug"), self.show_report_bug)
-#        help_menu.addSeparator()
-#        help_menu.addAction(_("&Donate to server"), self.donate_to_server)
-
         self.setMenuBar(menubar)
-
-#    def donate_to_server(self):
-#        d = self.network.get_donation_address()
-#        if d:
-#            host = self.network.get_parameters().server.host
-#            self.pay_to_URI('bitcoin:%s?message=donation for %s'%(d, host))
-#        else:
-#            self.show_error(_('No donation address for this server'))
 
     def show_about(self):
         QMessageBox.about(self, "Elcash Wallet",
