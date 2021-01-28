@@ -243,6 +243,7 @@ class TxWalletDetails(NamedTuple):
     tx_mined_status: TxMinedInfo
     mempool_depth_bytes: Optional[int]
     can_remove: bool  # whether user should be allowed to delete tx
+    # todo uncomment when turn on lightning
 #    is_lightning_funding_tx: bool
 
 
@@ -312,6 +313,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             for chan_id, chan in self.lnworker.channels.items():
                 channel_backups[chan_id.hex()] = self.lnworker.create_channel_backup(chan_id)
             new_db.put('channels', None)
+            # todo uncomment when turn on lightning
 #            new_db.put('lightning_privkey2', None)
 
         new_path = os.path.join(backup_dir, self.basename() + '.backup')
@@ -329,6 +331,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         # we want static_remotekey to be a wallet address
         return self.txin_type == 'p2wpkh'
 
+# todo uncomment when turn on lightning
 #    def init_lightning(self):
 #        assert self.can_have_lightning()
 #        if self.db.get('lightning_privkey2'):
@@ -568,6 +571,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         can_broadcast = False
         can_bump = False
         tx_hash = tx.txid()  # note: txid can be None! e.g. when called from GUI tx dialog
+        # todo uncomment when turn on lightning
 #        is_lightning_funding_tx = False
 #        if self.has_lightning() and tx_hash is not None:
 #            is_lightning_funding_tx = any([chan.funding_outpoint.txid == tx_hash
@@ -622,7 +626,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                 amount = tx_wallet_delta.delta
         else:
             amount = None
-
+# todo uncomment when turn on lightning
 #        if is_lightning_funding_tx:
 #            can_bump = False  # would change txid
 
@@ -639,6 +643,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             tx_mined_status=tx_mined_status,
             mempool_depth_bytes=exp_n,
             can_remove=can_remove,
+            # todo uncomment when turn on lightning
 #            is_lightning_funding_tx=is_lightning_funding_tx,
         )
 
@@ -2497,6 +2502,7 @@ class Deterministic_Wallet(Abstract_Wallet):
         # for a few seconds!
         self.synchronize()
 
+# todo uncomment when turn on lightning
 #        # create lightning keys
 #        if self.can_have_lightning():
 #            self.init_lightning()

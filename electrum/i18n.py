@@ -47,6 +47,7 @@ def set_language(x):
 languages = {
     '': _('Default'),
     'en_UK': _('English'),
+    # todo uncomment supported languages
 #    'ar_SA': _('Arabic'),
 #    'de_DE': _('German'),
 #    'es_ES': _('Spanish'),
