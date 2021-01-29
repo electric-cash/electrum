@@ -1,7 +1,6 @@
 import shutil
 import tempfile
 import os
-from unittest import skip
 
 from electrum import constants, blockchain
 from electrum.simple_config import SimpleConfig
