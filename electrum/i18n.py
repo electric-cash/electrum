@@ -39,6 +39,8 @@ def _(x):
 
 
 def set_language(x):
+    # todo remove it when all translations will be available
+    x = 'en_UK'
     global language
     if x:
         language = gettext.translation('electrum', LOCALE_DIR, fallback=True, languages=[x])
