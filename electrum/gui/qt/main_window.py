@@ -177,6 +177,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.gui_thread = gui_object.gui_thread
         assert wallet, "no wallet"
         self.wallet = wallet
+# todo uncomment when turn on lightning
 #        if wallet.has_lightning():
 #            self.wallet.config.set_key('show_channels_tab', True)
 
@@ -215,6 +216,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.utxo_tab = self.create_utxo_tab()
         self.console_tab = self.create_console_tab()
         self.contacts_tab = self.create_contacts_tab()
+        # todo uncomment when turn on lightning
 #        self.channels_tab = self.create_channels_tab()
         tabs.addTab(self.create_history_tab(), read_QIcon("tab_history.png"), _('History'))
         tabs.addTab(self.send_tab, read_QIcon("tab_send.png"), _('Send'))
@@ -229,6 +231,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                 tabs.addTab(tab, icon, description.replace("&", ""))
 
         add_optional_tab(tabs, self.addresses_tab, read_QIcon("tab_addresses.png"), _("&Addresses"), "addresses")
+        # todo uncomment when turn on lightning
 #        add_optional_tab(tabs, self.channels_tab, read_QIcon("lightning.png"), _("Channels"), "channels")
         add_optional_tab(tabs, self.utxo_tab, read_QIcon("tab_coins.png"), _("Co&ins"), "utxo")
         add_optional_tab(tabs, self.contacts_tab, read_QIcon("tab_contacts.png"), _("Con&tacts"), "contacts")
@@ -500,6 +503,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
     def load_wallet(self, wallet: Abstract_Wallet):
         wallet.thread = TaskThread(self, self.on_error)
         self.update_recently_visited(wallet.storage.path)
+        # todo uncomment when turn on lightning
 #        if wallet.has_lightning():
 #            util.trigger_callback('channels_updated', wallet)
         self.need_update.set()
@@ -511,6 +515,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.update_console()
         self.clear_receive_tab()
         self.request_list.update()
+        # todo uncomment when turn on lightning
 #        self.channels_list.update()
         self.tabs.show()
         self.init_geometry()
@@ -610,6 +615,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         backup_dir = self.config.get('backup_dir')
         backup_dir_label = HelpLabel(_('Backup directory') + ':', backup_help)
         msg = _('Please select a backup directory')
+        # todo uncomment when turn on lightning
 #        if self.wallet.has_lightning() and self.wallet.lnworker.channels:
 #            msg += '\n\n' + ' '.join([
 #                _("Note that lightning channels will be converted to channel backups."),
@@ -701,6 +707,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         history_menu = wallet_menu.addMenu(_("&History"))
         history_menu.addAction(_("&Filter"), lambda: self.history_list.toggle_toolbar(self.config))
         history_menu.addAction(_("&Summary"), self.history_list.show_summary)
+        # fixme hisotry plot
 #        history_menu.addAction(_("&Plot"), self.history_list.plot_history_dialog)
         history_menu.addAction(_("&Export"), self.history_list.export_history_dialog)
         contacts_menu = wallet_menu.addMenu(_("Contacts"))
@@ -725,6 +732,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         view_menu = menubar.addMenu(_("&View"))
         add_toggle_action(view_menu, self.addresses_tab)
         add_toggle_action(view_menu, self.utxo_tab)
+        # todo uncomment when turn on lightning
 #        add_toggle_action(view_menu, self.channels_tab)
         add_toggle_action(view_menu, self.contacts_tab)
         add_toggle_action(view_menu, self.console_tab)
@@ -741,6 +749,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             tools_menu.addAction(_("Electrum preferences"), self.settings_dialog)
 
         tools_menu.addAction(_("&Network"), self.gui_object.show_network_dialog).setEnabled(bool(self.network))
+        # todo uncomment when turn on lightning
 #        tools_menu.addAction(_("&Lightning Network"), self.gui_object.show_lightning_dialog).setEnabled(bool(self.wallet.has_lightning() and self.network))
 #        tools_menu.addAction(_("Local &Watchtower"), self.gui_object.show_watchtower_dialog).setEnabled(bool(self.network and self.network.local_watchtower))
         tools_menu.addAction(_("&Plugins"), self.plugins_dialog)
@@ -755,6 +764,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         raw_transaction_menu.addAction(_("&From file"), self.do_process_from_file)
         raw_transaction_menu.addAction(_("&From text"), self.do_process_from_text)
         raw_transaction_menu.addAction(_("&From the blockchain"), self.do_process_from_txid)
+        # fixme reading transaction from QR doesn't work
 #        raw_transaction_menu.addAction(_("&From QR code"), self.read_tx_from_qrcode)
         self.raw_transaction_menu = raw_transaction_menu
         run_hook('init_menubar_tools', self, tools_menu)
@@ -766,18 +776,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         help_menu.addSeparator()
         help_menu.addAction(_("&Documentation"), lambda: webopen("http://docs.electrum.org/")).setShortcut(QKeySequence.HelpContents)
         help_menu.addAction(_("&Report Bug"), self.show_report_bug)
-#        help_menu.addSeparator()
-#        help_menu.addAction(_("&Donate to server"), self.donate_to_server)
-
         self.setMenuBar(menubar)
-
-#    def donate_to_server(self):
-#        d = self.network.get_donation_address()
-#        if d:
-#            host = self.network.get_parameters().server.host
-#            self.pay_to_URI('bitcoin:%s?message=donation for %s'%(d, host))
-#        else:
-#            self.show_error(_('No donation address for this server'))
 
     def show_about(self):
         QMessageBox.about(self, "Elcash Wallet",
@@ -984,6 +983,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.utxo_list.update()
         self.contact_list.update()
         self.invoice_list.update()
+        # todo uncomment when turn on lightning
 #        self.channels_list.update_rows.emit(wallet)
         self.update_completions()
 
@@ -1084,6 +1084,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         buttons.addStretch(1)
         buttons.addWidget(self.clear_invoice_button)
         buttons.addWidget(self.create_invoice_button)
+        # todo uncomment when turn on lightning
 #        if self.wallet.has_lightning():
 #            self.create_invoice_button.setText(_('New Address'))
 #            self.create_lightning_invoice_button = QPushButton(_('Lightning'))
@@ -2342,6 +2343,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             ks_type = str(keystore_types[0]) if keystore_types else _('No keystore')
             grid.addWidget(QLabel(ks_type), 4, 1)
         # lightning
+        # todo uncomment when turn on lightning
 #        grid.addWidget(QLabel(_('Lightning') + ':'), 5, 0)
 #        if self.wallet.can_have_lightning():
 #            grid.addWidget(QLabel(_('Enabled')), 5, 1)

@@ -418,6 +418,7 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
         amount, fee = tx_details.amount, tx_details.fee
         size = self.tx.estimated_size()
         txid = self.tx.txid()
+        # todo uncomment when turn on lightning
 #        lnworker_history = self.wallet.lnworker.get_onchain_history() if self.wallet.lnworker else {}
 #        if txid in lnworker_history:
 #            item = lnworker_history[txid]
@@ -497,6 +498,7 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
             self.fee_warning_icon.setVisible(bool(risk_of_burning_coins))
         self.fee_label.setText(fee_str)
         self.size_label.setText(size_str)
+        # todo uncomment when turn on lightning
 #        if ln_amount is None or ln_amount == 0:
 #            ln_amount_str = ''
 #        elif ln_amount > 0:
@@ -513,6 +515,7 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
                 widget.menuAction().setVisible(show_psbt_only_widgets)
             else:
                 widget.setVisible(show_psbt_only_widgets)
+        # todo uncomment when turn on lightning
 #        if tx_details.is_lightning_funding_tx:
 #            self._ptx_join_txs_action.setEnabled(False)  # would change txid
 
@@ -600,6 +603,7 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
         vbox_left.addWidget(self.date_label)
         self.amount_label = TxDetailLabel()
         vbox_left.addWidget(self.amount_label)
+        # todo uncomment when turn on lightning
 #        self.ln_amount_label = TxDetailLabel()
 #        vbox_left.addWidget(self.ln_amount_label)
 
