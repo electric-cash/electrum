@@ -443,7 +443,8 @@ Use this if you want your local watchtower to keep running after you close your 
             (tx_widgets, _('Transactions')),
             # todo uncomment when turn on lightning
 #            (lightning_widgets, _('Lightning')),
-            (fiat_widgets, _('Fiat')),
+            # todo uncomment when api exchange available
+#            (fiat_widgets, _('Fiat')),
             (oa_widgets, _('OpenAlias')),
         ]
         for widgets, name in tabs_info:
