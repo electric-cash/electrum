@@ -471,7 +471,8 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
         else:
             self.block_hash_label.hide()
             self.block_height_label.hide()
-        if amount is None and ln_amount is None:
+        # todo add "and ln_amount is None" check for lightning
+        if amount is None:
             amount_str = _("Transaction unrelated to your wallet")
         elif amount is None:
             amount_str = ''
