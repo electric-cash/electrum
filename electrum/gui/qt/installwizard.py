@@ -25,6 +25,7 @@ from electrum.i18n import _
 
 from .seed_dialog import SeedLayout, KeysLayout
 from .network_dialog import NetworkChoiceLayout
+from .terms_and_conditions_mixin import TermsAndConditionsMixin
 from .util import (MessageBoxMixin, Buttons, icon_path, ChoicesLayout, WWLabel,
                    InfoButton, char_width_in_lineedit, PasswordLineEdit)
 from .password_dialog import PasswordLayout, PasswordLayoutForHW, PW_NEW
@@ -145,7 +146,7 @@ class WalletAlreadyOpenInMemory(Exception):
 
 
 # WindowModalDialog must come first as it overrides show_error
-class InstallWizard(QDialog, MessageBoxMixin, BaseWizard):
+class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixin):
 
     accept_signal = pyqtSignal()
 
@@ -454,10 +455,9 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard):
         self.exec_layout(slayout, title, next_enabled=False)
         return slayout.get_text()
 
-    def seed_input(self, title, message, is_seed, options):
+    def seed_input(self, title, message, options):
         slayout = SeedLayout(
             title=message,
-            is_seed=is_seed,
             options=options,
             parent=self,
             config=self.config,
@@ -485,7 +485,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard):
         return self.text_input(title, message, is_valid)
 
     @wizard_dialog
-    def restore_seed_dialog(self, run_next, test):
+    def restore_seed_dialog(self, run_next):
         options = []
         if self.opt_ext:
             options.append('ext')
@@ -493,10 +493,10 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard):
             options.append('bip39')
         title = _('Enter Seed')
         message = _('Please enter your seed phrase in order to restore your wallet.')
-        return self.seed_input(title, message, test, options)
+        return self.seed_input(title, message, options)
 
     @wizard_dialog
-    def confirm_seed_dialog(self, run_next, seed, test):
+    def confirm_seed_dialog(self, run_next, seed):
         self.app.clipboard().clear()
         title = _('Confirm Seed')
         message = ' '.join([
@@ -504,7 +504,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard):
             _('If you lose your seed, your money will be permanently lost.'),
             _('To make sure that you have properly saved your seed, please retype it here.')
         ])
-        seed, is_bip39, is_ext = self.seed_input(title, message, test, None)
+        seed, is_bip39, is_ext = self.seed_input(title, message, None)
         return seed
 
     @wizard_dialog
