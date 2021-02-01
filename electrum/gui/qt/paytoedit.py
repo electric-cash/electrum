@@ -81,6 +81,11 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         self.lightning_invoice = None
         self.previous_payto = ''
 
+    def keyPressEvent(self, event):
+        # suppress pressing "-" key
+        if event.text() != '-':
+            super().keyPressEvent(event)
+
     def setFrozen(self, b):
         self.setReadOnly(b)
         self.setStyleSheet(frozen_style if b else normal_style)
@@ -139,6 +144,15 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         assert bitcoin.is_address(address)
         return address
 
+    def _check_minus_sign(self, lines):
+        for i, line in enumerate(lines):
+            if '-' in line:
+                self.errors.append(PayToLineError(
+                    line_content=line,
+                    exc=ValueError('- sign is not allowed'),
+                    idx=i,
+                ))
+
     def check_text(self):
         self.errors = []
         if self.is_pr:
@@ -146,6 +160,7 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         # filter out empty lines
         lines = [i for i in self.lines() if i]
 
+        self._check_minus_sign(lines)
         self.payto_scriptpubkey = None
         self.lightning_invoice = None
         self.outputs = []
