@@ -234,6 +234,7 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         self.win.lock_amount(self.win.max_button.isChecked() or bool(outputs))
 
     def get_errors(self) -> Sequence[PayToLineError]:
+        self.errors = sorted(self.errors, key=lambda item: item.idx)
         return self.errors
 
     def get_destination_scriptpubkey(self) -> Optional[bytes]:
