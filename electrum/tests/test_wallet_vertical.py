@@ -84,7 +84,6 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         super().setUp()
         self.config = SimpleConfig({'electrum_path': self.electrum_path})
 
-    @from_seed_patch
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_seed_standard(self, mock_save_db):
         seed_words = 'cycle rocket west magnet parrot shuffle foot correct salt library feed song'
@@ -94,17 +93,17 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
 
         WalletIntegrityHelper.check_seeded_keystore_sanity(self, ks)
         self.assertTrue(isinstance(ks, keystore.BIP32_KeyStore))
+        self.assertEqual(ks.get_derivation_prefix(), "m/44'/0'/0'")
 
-        self.assertEqual(ks.xprv, 'xprv9s21ZrQH143K32jECVM729vWgGq4mUDJCk1ozqAStTphzQtCTuoFmFafNoG1g55iCnBTXUzz3zWnDb5CVLGiFvmaZjuazHDL8a81cPQ8KL6')
-        self.assertEqual(ks.xpub, 'xpub661MyMwAqRbcFWohJWt7PHsFEJfZAvw9ZxwQoDa4SoMgsDDM1T7WK3u9E4edkC4ugRnZ8E4xDZRpk8Rnts3Nbt97dPwT52CwBdDWroaZf8U')
+        self.assertEqual(ks.xprv, 'xprv9yyDwTkEmoKLY2yo57nVLkCec99mxMCKVyMaPfG6aHNzaGxUTndHiwjZfPNHywjsBG7FrDAJWxTmQstKb79mHKE7Syz6N8bRHRadMRo75ST')
+        self.assertEqual(ks.xpub, 'xpub6CxaLyH8cAsdkX4GB9KVht9PAAzGMovAsCHBC3fi8cuyT5Hd1KwYGk43WfYiKiok4cNtLqiSNLJGUJyEmDQsaZYRozer5qEYiUHw8K3wASo')
 
         w = WalletIntegrityHelper.create_standard_wallet(ks, config=self.config)
         self.assertEqual(w.txin_type, 'p2pkh')
 
-        self.assertEqual(w.get_receiving_addresses()[0], '1NNkttn1YvVGdqBW4PR6zvc3Zx3H5owKRf')
-        self.assertEqual(w.get_change_addresses()[0], '1KSezYMhAJMWqFbVFB2JshYg69UpmEXR4D')
+        self.assertEqual(w.get_receiving_addresses()[0], '19DbUEjYRKNfN7FdrKYmsrsSWo78ebev1i')
+        self.assertEqual(w.get_change_addresses()[0], '18kLBne18VwvL63RB142GNNdGSPrh8YPik')
 
-    @from_seed_patch
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_seed_segwit(self, mock_save_db):
         seed_words = 'bitter grass shiver impose acquire brush forget axis eager alone wine silver'
@@ -114,17 +113,17 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
 
         WalletIntegrityHelper.check_seeded_keystore_sanity(self, ks)
         self.assertTrue(isinstance(ks, keystore.BIP32_KeyStore))
+        self.assertEqual(ks.get_derivation_prefix(), "m/84'/0'/0'")
 
-        self.assertEqual(ks.xprv, 'zprvAZswDvNeJeha8qZ8g7efN3FXYVJLaEUsE9TW6qXDEbVe74AZ75c2sZFZXPNFzxnhChDQ89oC8C5AjWwHmH1HeRKE1c4kKBQAmjUDdKDUZw2')
-        self.assertEqual(ks.xpub, 'zpub6nsHdRuY92FsMKdbn9BfjBCG6X8pyhCibNP6uDvpnw2cyrVhecvHRMa3Ne8kdJZxjxgwnpbHLkcR4bfnhHy6auHPJyDTQ3kianeuVLdkCYQ')
+        self.assertEqual(ks.xprv, 'zprvAdfMEGGCjX5JZF3DcuKaMvgbES4cNpXWSkfuW6uxDujgLFxWKMAvATT5H3PJNWsEAoQoVroTTb15E26T1RyXHDMEw1fGDQBRKj7Hzaa6qdE')
+        self.assertEqual(ks.xpub, 'zpub6rehdmo6Ztdbmj7givraj4dKnTu6nHFMoybWJVKZnFGfD4HertVAiFmZ8LSjvKSnm9CQ2DAsoYvjkCGtfPyaJg2ji5j1FLeYrjtwJ9GKsFJ')
 
         w = WalletIntegrityHelper.create_standard_wallet(ks, config=self.config)
         self.assertEqual(w.txin_type, 'p2wpkh')
 
-        self.assertEqual(w.get_receiving_addresses()[0], 'bc1q3g5tmkmlvxryhh843v4dz026avatc0zzr6h3af')
-        self.assertEqual(w.get_change_addresses()[0], 'bc1qdy94n2q5qcp0kg7v9yzwe6wvfkhnvyzje7nx2p')
+        self.assertEqual(w.get_receiving_addresses()[0], 'bc1qdlgh4gp7rsty5vt49alv9can6jalz37z0sy7t3')
+        self.assertEqual(w.get_change_addresses()[0], 'bc1qzdfkr9u2l9jsq2s6kqhjr7j7t0qzkgpjtydfse')
 
-    @from_seed_patch
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_seed_segwit_passphrase(self, mock_save_db):
         seed_words = 'bitter grass shiver impose acquire brush forget axis eager alone wine silver'
@@ -135,14 +134,14 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         WalletIntegrityHelper.check_seeded_keystore_sanity(self, ks)
         self.assertTrue(isinstance(ks, keystore.BIP32_KeyStore))
 
-        self.assertEqual(ks.xprv, 'zprvAZDmEQiCLUcZXPfrBXoksCD2R6RMAzAre7SUyBotibisy9c7vGhLYvHaP3d9rYU12DKAWdZfscPNA7qEPgTkCDqX5sE93ryAJAQvkDbfLxU')
-        self.assertEqual(ks.xpub, 'zpub6nD7dvF6ArArjskKHZLmEL9ky8FqaSti1LN5maDWGwFrqwwGTp1b6ic4EHwciFNaYDmCXcQYxXSiF9BjcLCMPcaYkVN2nQD6QjYQ8vpSR3Z')
+        self.assertEqual(ks.xprv, 'zprvAdnSMa78eh8jTTJqKRBRVT6PC6qeTB4ZAaBAVN9wrdoCZitPsc8UDBoHV5YqmYM1JbGH5kJAWtxTpUxnFLiz4aZzZqpu2GPTwV7hUoyo1jR')
+        self.assertEqual(ks.xpub, 'zpub6rmnm5e2V4h2fwPJRSiRrb37k8g8rdnQXo6mHkZZQyLBSXDYR9Sikz7mLNfHmxWJLD26cPnpcGatsyEdT5gBEn6PzN6Pq4PfTdv1aoLNVMq')
 
         w = WalletIntegrityHelper.create_standard_wallet(ks, config=self.config)
         self.assertEqual(w.txin_type, 'p2wpkh')
 
-        self.assertEqual(w.get_receiving_addresses()[0], 'bc1qx94dutas7ysn2my645cyttujrms5d9p57f6aam')
-        self.assertEqual(w.get_change_addresses()[0], 'bc1qcywwsy87sdp8vz5rfjh3sxdv6rt95kujdqq38g')
+        self.assertEqual(w.get_receiving_addresses()[0], 'bc1qmuhp3q2lj29u2hud3nfskc82fgpwv5ez50l0c7')
+        self.assertEqual(w.get_change_addresses()[0], 'bc1qhdlzs77mtva89waur3jk0xd25tqn2zky65y64n')
 
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_seed_old(self, mock_save_db):
@@ -339,7 +338,6 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         self.assertEqual(w.get_receiving_addresses()[0], 'bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu')
         self.assertEqual(w.get_change_addresses()[0], 'bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el')
 
-    @from_seed_patch
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_multisig_seed_standard(self, mock_save_db):
         seed_words = 'blast uniform dragon fiscal ensure vast young utility dinosaur abandon rookie sure'
@@ -348,8 +346,9 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         ks1 = keystore.from_seed(seed_words, '', True)
         WalletIntegrityHelper.check_seeded_keystore_sanity(self, ks1)
         self.assertTrue(isinstance(ks1, keystore.BIP32_KeyStore))
-        self.assertEqual(ks1.xprv, 'xprv9s21ZrQH143K3t9vo23J3hajRbzvkRLJ6Y1zFrUFAfU3t8oooMPfb7f87cn5KntgqZs5nipZkCiBFo5ZtaSD2eDo7j7CMuFV8Zu6GYLTpY6')
-        self.assertEqual(ks1.xpub, 'xpub661MyMwAqRbcGNEPu3aJQqXTydqR9t49Tkwb4Esrj112kw8xLthv8uybxvaki4Ygt9xiwZUQGeFTG7T2TUzR3eA4Zp3aq5RXsABHFBUrq4c')
+        self.assertEqual(ks1.get_derivation_prefix(), "m/48'/0'/0'/3'")
+        self.assertEqual(ks1.xprv, 'xprv9zuqi2eUqvN8xQANAtZiLRUKv5ctHWPXcfR72WKoRf2dRAaJ3Q3DEX8rGrKi2Ecnmv33YP1G5yu7psmWhi8NAp3YvYcqfrfuknpzrNrD3to')
+        self.assertEqual(ks1.xpub, 'xpub6DuC7YBNgHvSAtEqGv6ihZR4U7TNgy7NytLhptjQyzZcHxuSawMTnKTL86fpmEBfL1Gi2dLCz9KQPrcYjAxMR6LWBagje7oUDcqFMkLja48')
 
         # electrum seed: ghost into match ivory badge robot record tackle radar elbow traffic loud
         ks2 = keystore.from_xpub('xpub661MyMwAqRbcGfCPEkkyo5WmcrhTq8mi3xuBS7VEZ3LYvsgY1cCFDbenT33bdD12axvrmXhuX3xkAbKci3yZY9ZEk8vhLic7KNhLjqdh5ec')
@@ -359,10 +358,9 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         w = WalletIntegrityHelper.create_multisig_wallet([ks1, ks2], '2of2', config=self.config)
         self.assertEqual(w.txin_type, 'p2sh')
 
-        self.assertEqual(w.get_receiving_addresses()[0], '32ji3QkAgXNz6oFoRfakyD3ys1XXiERQYN')
-        self.assertEqual(w.get_change_addresses()[0], '36XWwEHrrVCLnhjK5MrVVGmUHghr9oWTN1')
+        self.assertEqual(w.get_receiving_addresses()[0], '3QuMoYn1C3haSoaJzn9WyQ1RLpt6Vr9NjS')
+        self.assertEqual(w.get_change_addresses()[0], '3Q75FbsuSdABNLq4o9cacGWnbCD7kjkbzC')
 
-    @from_seed_patch
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_electrum_multisig_seed_segwit(self, mock_save_db):
         seed_words = 'snow nest raise royal more walk demise rotate smooth spirit canyon gun'
@@ -371,8 +369,9 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         ks1 = keystore.from_seed(seed_words, '', True)
         WalletIntegrityHelper.check_seeded_keystore_sanity(self, ks1)
         self.assertTrue(isinstance(ks1, keystore.BIP32_KeyStore))
-        self.assertEqual(ks1.xprv, 'ZprvAjxLRqPiDfPDxXrm8JvcoCGRAW6xUtktucG6AMtdzaEbTEJN8qcECvujfhtDU3jLJ9g3Dr3Gz5m1ypfMs8iSUh62gWyHZ73bYLRWyeHf6y4')
-        self.assertEqual(ks1.xpub, 'Zpub6xwgqLvc42wXB1wEELTdALD9iXwStMUkGqBgxkJFYumaL2dWgNvUkjEDWyDFZD3fZuDWDzd1KQJ4NwVHS7hs6H6QkpNYSShfNiUZsgMdtNg')
+        self.assertEqual(ks1.get_derivation_prefix(), "m/48'/0'/0'/2'")
+        self.assertEqual(ks1.xprv, 'ZprvAr5kqbDTjd3gfbEqVYc8AyWr7e6EwFn3Q872fL6HPvamwjTcxgCZGqeE9wdLcH5Zz9RYsxkkwYpSzej7bMpoCPnxp8ixFYjpMZqYZrZ8r6B')
+        self.assertEqual(ks1.xpub, 'Zpub7557F6kMZzbyt5KJba98Y7TaffvjLiVtmM2dTiVtxG7kpXnmWDWopdxi1EEPk7KhQHhK25vzH9iUnGe2JFrL233fAMw27uurpgoYneJvsBZ')
 
         # electrum seed: hedgehog sunset update estate number jungle amount piano friend donate upper wool
         ks2 = keystore.from_xpub('Zpub6y4oYeETXAbzLNg45wcFDGwEG3vpgsyMJybiAfi2pJtNF3i3fJVxK2BeZJaw7VeKZm192QHvXP3uHDNpNmNDbQft9FiMzkKUhNXQafUMYUY')
@@ -382,8 +381,8 @@ class TestWalletKeystoreAddressIntegrityForMainnet(ElectrumTestCase):
         w = WalletIntegrityHelper.create_multisig_wallet([ks1, ks2], '2of2', config=self.config)
         self.assertEqual(w.txin_type, 'p2wsh')
 
-        self.assertEqual(w.get_receiving_addresses()[0], 'bc1qvzezdcv6vs5h45ugkavp896e0nde5c5lg5h0fwe2xyfhnpkxq6gq7pnwlc')
-        self.assertEqual(w.get_change_addresses()[0], 'bc1qxqf840dqswcmu7a8v82fj6ej0msx08flvuy6kngr7axstjcaq6us9hrehd')
+        self.assertEqual(w.get_receiving_addresses()[0], 'bc1qrk0jf56um55t0pcnpc6nm20n58jpyaxa6kr29mkz9xrhvdv3wa0qt8jxd6')
+        self.assertEqual(w.get_change_addresses()[0], 'bc1qv8qmpxeeew45ym9dy7fv2rl2jkwal4dx9fmtpy7yjnv3xk8lza4s95p3hx')
 
     @mock.patch.object(wallet.Abstract_Wallet, 'save_db')
     def test_bip39_multisig_seed_bip45_standard(self, mock_save_db):
