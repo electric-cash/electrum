@@ -7,27 +7,24 @@ CONTRIB="$PROJECT_ROOT/contrib"
 CONTRIB_APPIMAGE="$CONTRIB/build-linux/appimage"
 DISTDIR="$PROJECT_ROOT/dist"
 BUILDDIR="$CONTRIB_APPIMAGE/build/appimage"
-APPDIR="$BUILDDIR/electrum.AppDir"
+APPDIR="$BUILDDIR/elcash-wallet.AppDir"
 CACHEDIR="$CONTRIB_APPIMAGE/.cache/appimage"
-PIP_CACHE_DIR="$CACHEDIR/pip_cache"
 
 export GCC_STRIP_BINARIES="1"
 
 # pinned versions
-# note: compiling python 3.8.x requires at least glibc 2.27,
-#       which is first available on ubuntu 18.04
 PYTHON_VERSION=3.7.9
 PKG2APPIMAGE_COMMIT="eb8f3acdd9f11ab19b78f5cb15daa772367daf15"
 SQUASHFSKIT_COMMIT="ae0d656efa2d0df2fcac795b6823b44462f19386"
 
 
 VERSION=`git describe --tags --dirty --always`
-APPIMAGE="$DISTDIR/electrum-$VERSION-x86_64.AppImage"
+APPIMAGE="$DISTDIR/elcash-wallet-$VERSION-x86_64.AppImage"
 
 . "$CONTRIB"/build_tools_util.sh
 
 rm -rf "$BUILDDIR"
-mkdir -p "$APPDIR" "$CACHEDIR" "$PIP_CACHE_DIR" "$DISTDIR"
+mkdir -p "$APPDIR" "$CACHEDIR" "$DISTDIR"
 
 # potential leftover from setuptools that might make pip put garbage in binary
 rm -rf "$PROJECT_ROOT/build"
@@ -79,6 +76,7 @@ git clone "https://github.com/squashfskit/squashfskit.git" "$BUILDDIR/squashfski
 )
 MKSQUASHFS="$BUILDDIR/squashfskit/squashfs-tools/mksquashfs"
 
+chmod +x "$CONTRIB"/make_libsecp256k1.sh
 
 "$CONTRIB"/make_libsecp256k1.sh || fail "Could not build libsecp"
 cp -f "$PROJECT_ROOT/electrum/libsecp256k1.so.0" "$APPDIR/usr/lib/libsecp256k1.so.0" || fail "Could not copy libsecp to its destination"
@@ -104,12 +102,13 @@ info "preparing electrum-locale."
 (
     cd "$PROJECT_ROOT"
     git submodule update --init
+    cp -r ./electrum/locale ./contrib/deterministic-build/electrum-locale/
 
     pushd "$CONTRIB"/deterministic-build/electrum-locale
     if ! which msgfmt > /dev/null 2>&1; then
         fail "Please install gettext"
     fi
-    for i in ./locale/*; do
+    for i in $(find ./locale -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
         dir="$PROJECT_ROOT/electrum/$i/LC_MESSAGES"
         mkdir -p $dir
         msgfmt --output-file="$dir/electrum.mo" "$i/electrum.po" || true
@@ -119,8 +118,9 @@ info "preparing electrum-locale."
 
 
 info "Installing build dependencies."
+mkdir -p "$CACHEDIR/pip_cache"
 "$python" -m pip install --no-dependencies --no-binary :all: --no-warn-script-location \
-    --cache-dir "$PIP_CACHE_DIR" -r "$CONTRIB/deterministic-build/requirements-build-appimage.txt"
+    --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements-build-appimage.txt"
 
 info "installing electrum and its dependencies."
 # note: we prefer compiling C extensions ourselves, instead of using binary wheels,
@@ -128,14 +128,14 @@ info "installing electrum and its dependencies."
 #       - PyQt5, as it's harder to build from source
 #       - cryptography, as building it would need openssl 1.1, not available on ubuntu 16.04
 "$python" -m pip install --no-dependencies --no-binary :all: --no-warn-script-location \
-    --cache-dir "$PIP_CACHE_DIR" -r "$CONTRIB/deterministic-build/requirements.txt"
+    --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements.txt"
 "$python" -m pip install --no-dependencies --no-binary :all: --only-binary pyqt5,cryptography --no-warn-script-location \
-    --cache-dir "$PIP_CACHE_DIR" -r "$CONTRIB/deterministic-build/requirements-binaries.txt"
+    --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements-binaries.txt"
 "$python" -m pip install --no-dependencies --no-binary :all: --no-warn-script-location \
-    --cache-dir "$PIP_CACHE_DIR" -r "$CONTRIB/deterministic-build/requirements-hw.txt"
+    --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements-hw.txt"
 
 "$python" -m pip install --no-dependencies --no-warn-script-location \
-    --cache-dir "$PIP_CACHE_DIR" "$PROJECT_ROOT"
+    --cache-dir "$CACHEDIR/pip_cache" "$PROJECT_ROOT"
 
 # was only needed during build time, not runtime
 "$python" -m pip uninstall -y Cython
@@ -146,7 +146,7 @@ cp "/usr/lib/x86_64-linux-gnu/libzbar.so.0" "$APPDIR/usr/lib/libzbar.so.0"
 
 
 info "desktop integration."
-cp "$PROJECT_ROOT/electrum.desktop" "$APPDIR/electrum.desktop"
+cp "$PROJECT_ROOT/electrum.desktop" "$APPDIR/elcash-wallet.desktop"
 cp "$PROJECT_ROOT/electrum/gui/icons/electrum.png" "$APPDIR/electrum.png"
 
 
@@ -156,6 +156,7 @@ cp "$CONTRIB_APPIMAGE/apprun.sh" "$APPDIR/AppRun"
 info "finalizing AppDir."
 (
     export PKG2AICOMMIT="$PKG2APPIMAGE_COMMIT"
+	chmod +x "$CACHEDIR/functions.sh"
     . "$CACHEDIR/functions.sh"
 
     cd "$APPDIR"

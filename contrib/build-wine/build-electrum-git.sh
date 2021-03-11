@@ -1,12 +1,20 @@
 #!/bin/bash
 
-NAME_ROOT=electrum
+NAME_ROOT=elcash-wallet
 
+# These settings probably don't need any change
+export WINEPREFIX=/opt/wine64
+export WINEDEBUG=-all
 export PYTHONDONTWRITEBYTECODE=1
+
+PYHOME=c:/python3
+PYTHON="wine $PYHOME/python.exe -OO -B"
 
 
 # Let's begin!
 set -e
+
+here="$(dirname "$(readlink -e "$0")")"
 
 . "$CONTRIB"/build_tools_util.sh
 
@@ -18,11 +26,13 @@ info "Last commit: $VERSION"
 # Load electrum-locale for this release
 git submodule update --init
 
+cp -r ./electrum/locale ./contrib/deterministic-build/electrum-locale/
+
 pushd ./contrib/deterministic-build/electrum-locale
 if ! which msgfmt > /dev/null 2>&1; then
     fail "Please install gettext"
 fi
-for i in ./locale/*; do
+for i in $(find ./locale -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
     dir=$WINEPREFIX/drive_c/electrum/electrum/$i/LC_MESSAGES
     mkdir -p $dir
     msgfmt --output-file=$dir/electrum.mo $i/electrum.po || true
@@ -34,19 +44,14 @@ popd
 
 
 # Install frozen dependencies
-$WINE_PYTHON -m pip install --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements.txt
+$PYTHON -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements.txt
 
-$WINE_PYTHON -m pip install --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements-binaries.txt
-
-$WINE_PYTHON -m pip install --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements-hw.txt
+$PYTHON -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum
 # see https://github.com/pypa/pip/issues/2195 -- pip makes a copy of the entire directory
 info "Pip installing Electrum. This might take a long time if the project folder is large."
-$WINE_PYTHON -m pip install --no-dependencies --no-warn-script-location .
+$PYTHON -m pip install --no-dependencies --no-warn-script-location .
 popd
 
 
@@ -54,7 +59,7 @@ rm -rf dist/
 
 # build standalone and portable versions
 info "Running pyinstaller..."
-wine "$WINE_PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
+wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
 
 # set timestamps in dist, in order to make the installer reproducible
 pushd dist
@@ -66,7 +71,7 @@ info "building NSIS installer"
 wine "$WINEPREFIX/drive_c/Program Files (x86)/NSIS/makensis.exe" /DPRODUCT_VERSION=$VERSION electrum.nsi
 
 cd dist
-mv electrum-setup.exe $NAME_ROOT-$VERSION-setup.exe
+mv elcash-wallet-setup.exe $NAME_ROOT-$VERSION-setup.exe
 cd ..
 
 info "Padding binaries to 8-byte boundaries, and fixing COFF image checksum in PE header"
@@ -111,4 +116,4 @@ EOF
     done
 )
 
-sha256sum dist/electrum*.exe
+sha256sum dist/elcash-wallet*.exe

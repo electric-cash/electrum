@@ -2,12 +2,11 @@
 
 # Parameterize
 PYTHON_VERSION=3.7.9
-BUILDDIR=/tmp/electrum-build
-PACKAGE=Electrum
-GIT_REPO=https://github.com/spesmilo/electrum
+BUILDDIR=/tmp/elcash-wallet
+PACKAGE=ELCASHWallet
+GIT_REPO=https://github.com/electric-cash/elcash-wallet
 
 export GCC_STRIP_BINARIES="1"
-
 
 . $(dirname "$0")/../build_tools_util.sh
 
@@ -122,6 +121,9 @@ echo "caea266f3fc3982adc55d6cb8d9bad10f6e61f0c24ce5901aa1804618e08e14d  contrib/
 
 info "Preparing for building libsecp256k1"
 brew install autoconf automake libtool
+
+chmod +x "$CONTRIB"/make_libsecp256k1.sh
+
 "$CONTRIB"/make_libsecp256k1.sh || fail "Could not build libsecp"
 cp "$ROOT_FOLDER"/electrum/libsecp256k1.0.dylib contrib/osx
 
@@ -162,6 +164,7 @@ VERSION=`git describe --tags --dirty --always`
 info "Building binary"
 APP_SIGN="$CODESIGN_CERT" pyinstaller --noconfirm --ascii --clean --name $VERSION contrib/osx/osx.spec || fail "Could not build binary"
 
+
 info "Adding bitcoin URI types to Info.plist"
 plutil -insert 'CFBundleURLTypes' \
 	-xml '<array><dict> <key>CFBundleURLName</key> <string>bitcoin</string> <key>CFBundleURLSchemes</key> <array><string>bitcoin</string></array> </dict></array>' \
@@ -180,9 +183,10 @@ if [ ! -z "$CODESIGN_CERT" ]; then
 fi
 
 info "Creating .DMG"
-hdiutil create -fs HFS+ -volname $PACKAGE -srcfolder dist/$PACKAGE.app dist/electrum-$VERSION.dmg || fail "Could not create .DMG"
+hdiutil create -fs HFS+ -volname $PACKAGE -srcfolder dist/$PACKAGE.app dist/ELCASHWallet-$VERSION.dmg || fail "Could not create .DMG"
 
-DoCodeSignMaybe ".DMG" "dist/electrum-${VERSION}.dmg"
+DoCodeSignMaybe ".DMG" "dist/ELCASHWallet-${VERSION}.dmg"
+
 
 if [ -z "$CODESIGN_CERT" ]; then
     warn "App was built successfully but was not code signed. Users may get security warnings from macOS."
