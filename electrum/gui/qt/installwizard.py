@@ -14,20 +14,20 @@ from PyQt5.QtCore import QRect, QEventLoop, Qt, pyqtSignal
 from PyQt5.QtGui import QPalette, QPen, QPainter, QPixmap
 from PyQt5.QtWidgets import (QWidget, QDialog, QLabel, QHBoxLayout, QMessageBox,
                              QVBoxLayout, QLineEdit, QFileDialog, QPushButton,
-                             QGridLayout, QSlider, QScrollArea, QApplication)
+                             QGridLayout, QSlider, QScrollArea, QApplication, QComboBox)
 
 from electrum.wallet import Wallet, Abstract_Wallet
 from electrum.storage import WalletStorage, StorageReadWriteError
 from electrum.util import UserCancelled, InvalidPassword, WalletFileException, get_new_wallet_name
 from electrum.base_wizard import BaseWizard, HWD_SETUP_DECRYPT_WALLET, GoBack, ReRunDialog
 from electrum.network import Network
-from electrum.i18n import _
+from electrum.i18n import _, languages, set_language
 
 from .seed_dialog import SeedLayout, KeysLayout
 from .network_dialog import NetworkChoiceLayout
-from .terms_and_conditions_mixin import TermsAndConditionsMixin
+from .terms_and_conditions_mixin import TermsAndConditionsMixin, PushedButton
 from .util import (MessageBoxMixin, Buttons, icon_path, ChoicesLayout, WWLabel,
-                   InfoButton, char_width_in_lineedit, PasswordLineEdit)
+                   InfoButton, char_width_in_lineedit, PasswordLineEdit, get_default_language)
 from .password_dialog import PasswordLayout, PasswordLayoutForHW, PW_NEW
 from .bip39_recovery_dialog import Bip39RecoveryDialog
 from electrum.plugin import run_hook, Plugins
@@ -153,7 +153,6 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
     def __init__(self, config: 'SimpleConfig', app: QApplication, plugins: 'Plugins', *, gui_object: 'ElectrumGui'):
         QDialog.__init__(self, None)
         BaseWizard.__init__(self, config, plugins)
-        self.setWindowTitle('ELCASH Wallet  -  ' + _('Install Wizard'))
         self.app = app
         self.config = config
         self.gui_thread = gui_object.gui_thread
@@ -161,12 +160,11 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         self.accept_signal.connect(self.accept)
         self.title = QLabel()
         self.main_widget = QWidget()
-        self.back_button = QPushButton(_("Back"), self)
-        self.back_button.setText(_('Back') if self.can_go_back() else _('Cancel'))
-        self.next_button = QPushButton(_("Next"), self)
+        self.back_button = QPushButton(self)
+        self.next_button = QPushButton(self)
         self.next_button.setDefault(True)
         self.logo = QLabel()
-        self.please_wait = QLabel(_("Please wait..."))
+        self.please_wait = QLabel()
         self.please_wait.setAlignment(Qt.AlignCenter)
         self.icon_filename = None
         self.loop = QEventLoop()
@@ -197,9 +195,40 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         outer_vbox.addLayout(hbox)
         outer_vbox.addLayout(Buttons(self.back_button, self.next_button))
         self.set_icon('electrum.png')
+        self._set_gui_text()
         self.show()
         self.raise_()
         self.refresh_gui()  # Need for QT on MacOSX.  Lame.
+
+    def _set_gui_text(self):
+        self.setWindowTitle('ELCASH Wallet  -  ' + _('Install Wizard'))
+        self.back_button.setText(_('Back') if self.can_go_back() else _('Cancel'))
+        self.next_button.setText(_("Next"))
+        self.please_wait.setText(_("Please wait..."))
+
+    def select_and_save_language(self):
+        """Method for selecting and saving language in config file as {'language': <language-abbreviation: str>}"""
+        filtered_languages = dict(filter(lambda item: item[1] != 'Default', languages.items()))
+        language_abbreviations = list(filtered_languages.keys())
+        default_language = get_default_language()
+        vbox = QVBoxLayout()
+        cb = QComboBox()
+        cb.addItems(filtered_languages.values())
+        cb.setCurrentIndex(language_abbreviations.index(default_language))
+        vbox.addWidget(cb)
+
+        def on_change():
+            language_abbreviation = language_abbreviations[cb.currentIndex()]
+            set_language(language_abbreviation)
+            self._set_gui_text()
+            self.refresh_gui()
+
+        cb.currentIndexChanged.connect(on_change)
+        # refresh config language
+        on_change()
+        pushed_button = self.exec_layout(vbox, title=_('Select installation language'))
+        if pushed_button == PushedButton.NEXT:
+            self.config.set_key('language', language_abbreviations[cb.currentIndex()])
 
     def select_storage(self, path, get_wallet_from_daemon) -> Tuple[str, Optional[WalletStorage]]:
 
