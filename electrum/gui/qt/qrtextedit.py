@@ -13,7 +13,6 @@ class ShowQRTextEdit(ButtonsTextEdit):
         ButtonsTextEdit.__init__(self, text)
         self.config = config
         self.setReadOnly(True)
-#todo uncomment when QR Read gonna be fixed
         icon = "qrcode_white.png" if ColorScheme.dark_scheme else "qrcode.png"
         self.addButton(icon, self.qr_show, _("Show as QR code"))
 
@@ -44,7 +43,7 @@ class ScanQRTextEdit(ButtonsTextEdit, MessageBoxMixin):
         self.allow_multi = allow_multi
         self.config = config
         self.setReadOnly(False)
-        #todo uncomment when ReadFile handle only text extension and QR Read gonna be fixed
+        # todo uncomment when ReadFile handle only text extension
         # self.addButton("file.png", self.file_input, _("Read file"))
         icon = "camera_white.png" if ColorScheme.dark_scheme else "camera_dark.png"
         self.addButton(icon, self.qr_input, _("Read QR code"))
