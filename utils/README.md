@@ -9,8 +9,8 @@ e.g
 ./update_copy_for_lokalise.sh ../electrum/locale/message.pot
 ```
 
-|:warning: Info: Make sure that script is executable. In case of getting error `bash: ./update_copy_for_lokalise.sh: Permission denied` using `chmod +x update_copy_for_lokalise.sh` should solve the problem |
-|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|:info: Info: Make sure that script is executable. In case of getting error `bash: ./update_copy_for_lokalise.sh: Permission denied` using `chmod +x update_copy_for_lokalise.sh` should solve the problem |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 
 ## CSV translation workflow
