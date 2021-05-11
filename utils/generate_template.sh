@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 output_file=message.pot
 if [ -n "$1" ]; then
