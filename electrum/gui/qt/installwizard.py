@@ -200,7 +200,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
 
     def select_and_save_language(self):
         """Method for selecting and saving language in config file as {'language': <language-abbreviation: str>}"""
-        filtered_languages = dict(filter(lambda item: item[1] != 'Default', languages.items()))
+        filtered_languages = {key: value for key, value in languages.items() if key}
         language_abbreviations = list(filtered_languages.keys())
         default_language = get_default_language()
         vbox = QVBoxLayout()
