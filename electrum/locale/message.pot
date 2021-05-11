@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-11 12:14+0200\n"
+"POT-Creation-Date: 2021-05-11 14:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -608,7 +608,7 @@ msgstr "Connected to {} peers"
 msgid "Connection strings must be in <node_pubkey>@<host>:<port> format"
 msgstr "Connection strings must be in <node_pubkey>@<host>:<port> format"
 
-msgid "Consider trying to connect to a different server, or updating Electrum."
+msgid "Consider trying to connect to a different server, or updating ELCASH Wallet."
 msgstr ""
 
 msgid "Contacts"
@@ -815,6 +815,15 @@ msgstr "Dynamic fee estimates not available"
 msgid "ELCASH Wallet communicates with remote servers to get information about your transactions and addresses. The servers all fulfill the same purpose only differing in hardware. In most cases you simply want to let ELCASH Wallet pick one at random.  However if you prefer feel free to select a server manually."
 msgstr "ELCASH Wallet communicates with remote servers to get information about your transactions and addresses. The servers all fulfill the same purpose only differing in hardware. In most cases you simply want to let ELCASH Wallet pick one at random.  However if you prefer feel free to select a server manually."
 
+msgid "ELCASH Wallet connects to several nodes in order to download block headers and find out the longest blockchain."
+msgstr ""
+
+msgid "ELCASH Wallet preferences"
+msgstr ""
+
+msgid "ELCASH Wallet sends your wallet addresses to a single server, in order to receive your transaction history."
+msgstr ""
+
 msgid "ELCASH Wallet was unable to copy your wallet file to the specified location."
 msgstr "ELCASH Wallet was unable to copy your wallet file to the specified location."
 
@@ -832,15 +841,6 @@ msgstr "ELCASH Wallet will now exit."
 
 msgid "ELCASH Wallet's focus is speed, with low resource usage and simplifying Electric Cash."
 msgstr "ELCASH Wallet's focus is speed, with low resource usage and simplifying Electric Cash."
-
-msgid "ELCASH connects to several nodes in order to download block headers and find out the longest blockchain."
-msgstr ""
-
-msgid "ELCASH preferences"
-msgstr ""
-
-msgid "ELCASH sends your wallet addresses to a single server, in order to receive your transaction history."
-msgstr ""
 
 msgid "ELCASH wallet"
 msgstr "ELCASH wallet"
@@ -1004,7 +1004,7 @@ msgstr "Error: duplicate master public key"
 msgid "Estimate"
 msgstr "Estimate"
 
-msgid "Exit ELCASH"
+msgid "Exit ELCASH Wallet"
 msgstr ""
 
 msgid "Expenditures"
@@ -1269,13 +1269,13 @@ msgstr "I disagree"
 msgid "I have lost my Google Authenticator account"
 msgstr "I have lost my Google Authenticator account"
 
-msgid "If auto-connect is enabled, ELCASH will always use a server that is on the longest blockchain."
+msgid "If auto-connect is enabled, ELCASH Wallet will always use a server that is on the longest blockchain."
 msgstr ""
 
 msgid "If enabled, at most 100 satoshis might be lost due to this, per transaction."
 msgstr "If enabled, at most 100 satoshis might be lost due to this, per transaction."
 
-msgid "If it is disabled, you have to choose a server you want to use. ELCASH will warn you if your server is lagging."
+msgid "If it is disabled, you have to choose a server you want to use. ELCASH Wallet will warn you if your server is lagging."
 msgstr ""
 
 msgid "If this option is checked, Electrum will\nrun a local watchtower and protect your channels even if your wallet is not\nopen. For this to work, your computer needs to be online regularly."
@@ -2020,7 +2020,7 @@ msgstr "Please type it here."
 msgid "Please wait"
 msgstr "Please wait"
 
-msgid "Please wait while Electrum checks for available updates."
+msgid "Please wait while ELCASH Wallet checks for available updates."
 msgstr ""
 
 msgid "Please wait..."
@@ -2080,7 +2080,7 @@ msgstr "Provides support for air-gapped transaction signing."
 msgid "Proxy"
 msgstr "Proxy"
 
-msgid "Proxy settings apply to all connections: with ELCASH servers, but also with third-party services."
+msgid "Proxy settings apply to all connections: with Electric Cash servers, but also with third-party services."
 msgstr ""
 
 msgid "Proxy user"
@@ -2450,7 +2450,7 @@ msgstr "Signing with an address actually means signing with the corresponding pr
 msgid "Size:"
 msgstr "Size:"
 
-msgid "Something went wrong while executing Electrum."
+msgid "Something went wrong while executing ELCASH Wallet."
 msgstr ""
 
 msgid "Sorry!"
@@ -2555,7 +2555,7 @@ msgstr "Testnet is separate from the main Electric Cash network. It is used for 
 msgid "Text copied to clipboard"
 msgstr "Text copied to clipboard"
 
-msgid "The ELCASH address never expires and will always be part of this Elcash wallet."
+msgid "The ELCASH address never expires and will always be part of this ELCASH Wallet."
 msgstr ""
 
 msgid "The Lightning Network graph is fully synced."
@@ -3161,7 +3161,7 @@ msgstr "Wrong signature"
 msgid "Yes, I disagree"
 msgstr "Yes, I disagree"
 
-msgid "You are already on the latest version of Electrum."
+msgid "You are already on the latest version of ELCASH Wallet."
 msgstr ""
 
 msgid "You are following branch"
@@ -3197,7 +3197,7 @@ msgstr "You do not need to perform regular backups, because your wallet can be r
 msgid "You have multiple consecutive whitespaces or leading/trailing whitespaces in your passphrase."
 msgstr "You have multiple consecutive whitespaces or leading/trailing whitespaces in your passphrase."
 
-msgid "You may enter a Bitcoin address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a Bitcoin address)"
+msgid "You may enter a ELCASH address, a label from your list of contacts (a list of completions will be proposed), or an alias (email-like address that forwards to a ELCASH address)"
 msgstr ""
 
 msgid "You may extend your seed with custom words."
