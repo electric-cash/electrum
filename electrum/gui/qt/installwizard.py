@@ -493,7 +493,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         label.setMinimumWidth(400)
         header_layout.addWidget(label)
         if show_wif_help:
-            header_layout.addWidget(InfoButton(WIF_HELP_TEXT), alignment=Qt.AlignRight)
+            header_layout.addWidget(InfoButton(get_wif_help_text()), alignment=Qt.AlignRight)
         return self.text_input(title, header_layout, is_valid, allow_multi, file_filter=file_filter)
 
     @wizard_dialog
