@@ -40,15 +40,6 @@ pr_color = {
     PR_ROUTING: (.9, .6, .3, 1),
 }
 
-pr_tooltips = {
-    PR_UNPAID:_('Unpaid'),
-    PR_PAID:_('Paid'),
-    PR_UNKNOWN:_('Unknown'),
-    PR_EXPIRED:_('Expired'),
-    PR_INFLIGHT:_('In progress'),
-    PR_FAILED:_('Failed'),
-    PR_ROUTING: _('Computing route...'),
-}
 
 PR_DEFAULT_EXPIRATION_WHEN_CREATING = 24*60*60  # 1 day
 pr_expiration_values = {
@@ -88,6 +79,15 @@ class Invoice(StoredObject):
         return self.type == PR_TYPE_LN
 
     def get_status_str(self, status):
+        pr_tooltips = {
+            PR_UNPAID: _('Unpaid'),
+            PR_PAID: _('Paid'),
+            PR_UNKNOWN: _('Unknown'),
+            PR_EXPIRED: _('Expired'),
+            PR_INFLIGHT: _('In progress'),
+            PR_FAILED: _('Failed'),
+            PR_ROUTING: _('Computing route...'),
+        }
         status_str = pr_tooltips[status]
         if status == PR_UNPAID:
             if self.exp > 0 and self.exp != LN_EXPIRY_NEVER:
