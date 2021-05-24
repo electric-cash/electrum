@@ -63,7 +63,7 @@ from electrum.util import (format_time,
                            NoDynamicFeeEstimates, MultipleSpendMaxTxOutputs,
                            AddTransactionException, BITCOIN_BIP21_URI_SCHEME)
 from electrum.invoices import PR_TYPE_ONCHAIN, PR_TYPE_LN, PR_DEFAULT_EXPIRATION_WHEN_CREATING, Invoice
-from electrum.invoices import PR_PAID, PR_FAILED, pr_expiration_values, LNInvoice, OnchainInvoice
+from electrum.invoices import PR_PAID, get_pr_expiration_values, LNInvoice, OnchainInvoice
 from electrum.transaction import (Transaction, PartialTxInput,
                                   PartialTransaction, PartialTxOutput)
 from electrum.wallet import (Multisig_Wallet, CannotBumpFee, Abstract_Wallet,
@@ -1045,7 +1045,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.connect_fields(self, self.amount_e, self.fiat_send_e, None)
 
         self.expires_combo = QComboBox()
-        evl = sorted(pr_expiration_values.items())
+        evl = sorted(get_pr_expiration_values().items())
         evl_keys = [i[0] for i in evl]
         evl_values = [i[1] for i in evl]
         default_expiry = self.config.get('request_expiry', PR_DEFAULT_EXPIRATION_WHEN_CREATING)
