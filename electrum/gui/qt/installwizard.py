@@ -707,30 +707,48 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
 
     @wizard_dialog
     def line_dialog(self, run_next, title, message, default, test, warning='',
-                    presets=(), warn_issue4566=False):
+                    presets=(), is_restoring=False):
+        # todo set on 100, current small number is set only for gui testing purposes
+        max_chars_in_passphrase = 10
+        # todo use production ready address
+        support_email = 'support@gmail.com'
+        if is_restoring:
+            warning_label = QLabel(
+                _('Error') + ': ' +
+                _('You cannot use passphrase longer than {n} characters.').format(n=max_chars_in_passphrase) + ' ' +
+                _('If you want to restore wallet with such a big passphrase please contact support team '
+                  '{support_email} who help you :).').format(
+                    support_email=f'<a href="mailto:{support_email}">{support_email}</a>'
+                )
+            )
+            warning_label.setWordWrap(True)
+            warning_label.setTextFormat(Qt.RichText)
+        else:
+            warning_label = WWLabel(
+                _('Error') + ': ' +
+                _('You cannot use passphrase longer than {n} characters.').format(n=max_chars_in_passphrase) + ' ' +
+                _('Please use shorter one.')
+            )
+        warning_label.setStyleSheet('color: red')
         vbox = QVBoxLayout()
         vbox.addWidget(WWLabel(message))
         line = QLineEdit()
         line.setText(default)
         def f(text):
-            self.next_button.setEnabled(test(text))
-            if warn_issue4566:
-                text_whitespace_normalised = ' '.join(text.split())
-                warn_issue4566_label.setVisible(text != text_whitespace_normalised)
+            self.next_button.setEnabled(test(text) and len(text) <= max_chars_in_passphrase)
+            if len(text) > max_chars_in_passphrase:
+                line.setStyleSheet('border: 3px solid red; background-color: #FE8484;')
+                self.next_button.setEnabled(False)
+                warning_label.setVisible(True)
+            else:
+                warning_label.setVisible(False)
+                line.setStyleSheet('')
+
         line.textEdited.connect(f)
         vbox.addWidget(line)
         vbox.addWidget(WWLabel(warning))
-
-        warn_issue4566_label = WWLabel(
-            _("Warning") + ": " +
-            _("You have multiple consecutive whitespaces or leading/trailing "
-                "whitespaces in your passphrase.") + " " +
-            _("This is discouraged.") + " " +
-            _("Due to a bug, old versions of ELCASH Wallet will NOT be creating the "
-                "same wallet as newer versions or other software.")
-        )
-        warn_issue4566_label.setVisible(False)
-        vbox.addWidget(warn_issue4566_label)
+        warning_label.setVisible(False)
+        vbox.addWidget(warning_label)
 
         for preset in presets:
             button = QPushButton(preset[0])
