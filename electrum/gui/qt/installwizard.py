@@ -721,6 +721,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
             )
             warning_label.setWordWrap(True)
             warning_label.setTextFormat(Qt.RichText)
+            warning_label.setOpenExternalLinks(True)
         else:
             warning_label = WWLabel(
                 _('Error') + ': ' +
