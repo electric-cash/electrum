@@ -715,7 +715,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         if is_restoring:
             warning_label = QLabel(
                 _('Error') + ': ' +
-                _('You cannot use passphrase longer than {n} characters.').format(n=max_chars_in_passphrase) + ' ' +
+                _('The maximum number of characters for Seed Extention is {number}.').format(number=max_chars_in_passphrase) + ' ' +
                 _('If you want to restore wallet with such a big passphrase please contact support team '
                   '{support_email} who help you :).').format(
                     support_email=f'<a href="mailto:{support_email}">{support_email}</a>'
@@ -726,8 +726,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         else:
             warning_label = WWLabel(
                 _('Error') + ': ' +
-                _('You cannot use passphrase longer than {n} characters.').format(n=max_chars_in_passphrase) + ' ' +
-                _('Please use shorter one.')
+                _('The maximum number of characters for Seed Extention is {number}.').format(number=max_chars_in_passphrase)
             )
         warning_label.setStyleSheet('color: red')
         vbox = QVBoxLayout()
