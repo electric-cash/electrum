@@ -710,14 +710,12 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
                     presets=(), is_restoring=False):
         # todo set on 100, current small number is set only for gui testing purposes
         max_chars_in_passphrase = 10
-        # todo use production ready address
-        support_email = 'support@gmail.com'
+        support_email = 'contact@electriccash.global'
         if is_restoring:
             warning_label = QLabel(
                 _('Error') + ': ' +
-                _('The maximum number of characters for Seed Extention is {number}.').format(number=max_chars_in_passphrase) + ' ' +
-                _('If you want to restore wallet with such a big passphrase please contact support team '
-                  '{support_email} who help you :).').format(
+                _('The maximum number of characters for Seed Extension is {number}.').format(number=max_chars_in_passphrase) + ' ' +
+                _('If you want to restore your wallet with a longer Seed Extension, please contact our Support Team at {support_email}.').format(
                     support_email=f'<a href="mailto:{support_email}">{support_email}</a>'
                 )
             )
@@ -726,7 +724,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
         else:
             warning_label = WWLabel(
                 _('Error') + ': ' +
-                _('The maximum number of characters for Seed Extention is {number}.').format(number=max_chars_in_passphrase)
+                _('The maximum number of characters for Seed Extension is {number}.').format(number=max_chars_in_passphrase)
             )
         warning_label.setStyleSheet('color: red')
         vbox = QVBoxLayout()
