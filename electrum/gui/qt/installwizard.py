@@ -723,7 +723,7 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
                 _('If you want to restore your wallet with a longer Seed Extension, please {download_elcash_wallet_501} '
                   'or contact our Support Team at {support_email}.').format(
                     support_email=f'<a href="mailto:{support_email}">{support_email}</a>',
-                    download_elcash_wallet_501=f'<a href="{download_address}">{_("download ELCASH Wallet 5.0.1")}</a>',
+                    download_elcash_wallet_501=f'<a href="{download_address}">' + _("download ELCASH Wallet 5.0.1") + '</a>',
                 )
             )
             warning_label.setWordWrap(True)
