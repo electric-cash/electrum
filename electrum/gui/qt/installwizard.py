@@ -708,15 +708,22 @@ class InstallWizard(QDialog, MessageBoxMixin, BaseWizard, TermsAndConditionsMixi
     @wizard_dialog
     def line_dialog(self, run_next, title, message, default, test, warning='',
                     presets=(), is_restoring=False):
-        # todo set on 100, current small number is set only for gui testing purposes
-        max_chars_in_passphrase = 10
+        max_chars_in_passphrase = 100
         support_email = 'contact@electriccash.global'
+        wallet_binary_names = {
+            'win32': 'ELCASH-Wallet-v5.0.1-setup.exe',
+            'linux': 'ELCASH-Wallet-v5.0.1.AppImage',
+            'darwin': 'ELCASH-Wallet-v5.0.1.dmg',
+        }
+        download_address = f'https://electriccash.global/app/{wallet_binary_names[sys.platform]}'
         if is_restoring:
             warning_label = QLabel(
                 _('Error') + ': ' +
                 _('The maximum number of characters for Seed Extension is {number}.').format(number=max_chars_in_passphrase) + ' ' +
-                _('If you want to restore your wallet with a longer Seed Extension, please contact our Support Team at {support_email}.').format(
-                    support_email=f'<a href="mailto:{support_email}">{support_email}</a>'
+                _('If you want to restore your wallet with a longer Seed Extension, please {download_elcash_wallet_501} '
+                  'or contact our Support Team at {support_email}.').format(
+                    support_email=f'<a href="mailto:{support_email}">{support_email}</a>',
+                    download_elcash_wallet_501=f'<a href="{download_address}">{_("download ELCASH Wallet 5.0.1")}</a>',
                 )
             )
             warning_label.setWordWrap(True)
