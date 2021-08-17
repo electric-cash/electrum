@@ -2712,7 +2712,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         if not data:
             return
         # if the user scanned a bitcoin URI
-        if data.lower().startswith(BITCOIN_BIP21_URI_SCHEME + ':') or data.lower().startswith(BITCOIN_BIP21_URI_SCHEME_BARCKWARDS + ':'):
+        if data.lower().startswith((BITCOIN_BIP21_URI_SCHEME + ':', BITCOIN_BIP21_URI_SCHEME_BACKWARDS + ':'):
             self.pay_to_URI(data)
             return
         if data.lower().startswith('channel_backup:'):

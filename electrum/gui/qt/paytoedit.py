@@ -168,7 +168,7 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         if len(lines) == 1:
             data = lines[0]
             # try bip21 URI
-            if data.lower().startswith(BITCOIN_BIP21_URI_SCHEME + ':') or data.lower().startswith(BITCOIN_BIP21_URI_SCHEME_BACKWARDS + ':'):
+            if data.lower().startswith((BITCOIN_BIP21_URI_SCHEME + ':', BITCOIN_BIP21_URI_SCHEME_BACKWARDS + ':'):
                 self.win.pay_to_URI(data)
                 return
             # try LN invoice
@@ -271,7 +271,7 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
 
     def qr_input(self):
         data = super(PayToEdit,self).qr_input()
-        if data.lower().startswith(BITCOIN_BIP21_URI_SCHEME + ':') or data.lower().startswith(BITCOIN_BIP21_URI_SCHEME_BACKWARDS + ':'):
+        if data.lower().startswith((BITCOIN_BIP21_URI_SCHEME + ':', BITCOIN_BIP21_URI_SCHEME_BACKWARDS + ':'):
             self.win.pay_to_URI(data)
             # TODO: update fee
 
