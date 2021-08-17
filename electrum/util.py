@@ -755,8 +755,7 @@ def block_explorer_URL(config: 'SimpleConfig', kind: str, item: str) -> Optional
 
 
 # note: when checking against these, use .lower() to support case-insensitivity
-BITCOIN_BIP21_URI_SCHEME = 'elcash'
-BITCOIN_BIP21_URI_SCHEME_BACKWARDS = 'bitcoin'
+BITCOIN_BIP21_URI_SCHEME = ''
 LIGHTNING_URI_SCHEME = 'lightning'
 
 
@@ -772,14 +771,14 @@ def parse_URI(uri: str, on_pr: Callable = None, *, loop=None) -> dict:
     if not isinstance(uri, str):
         raise InvalidBitcoinURI(f"expected string, not {repr(uri)}")
 
-    if ':' not in uri:
-        if not bitcoin.is_address(uri):
-            raise InvalidBitcoinURI("Not a ELCASH address")
-        return {'address': uri}
+#    if ':' not in uri:
+#        if not bitcoin.is_address(uri):
+#            raise InvalidBitcoinURI("Not a ELCASH address")
+#        return {'address': uri}
 
     u = urllib.parse.urlparse(uri)
-    if u.scheme.lower() not in [BITCOIN_BIP21_URI_SCHEME, BITCOIN_BIP21_URI_SCHEME_BACKWARDS]:
-        raise InvalidBitcoinURI("Not a ELCASH URI")
+#    if u.scheme.lower() != BITCOIN_BIP21_URI_SCHEME:
+#        raise InvalidBitcoinURI("Not a ELCASH URI")
     address = u.path
 
     # python for android fails to parse query
