@@ -771,14 +771,7 @@ def parse_URI(uri: str, on_pr: Callable = None, *, loop=None) -> dict:
     if not isinstance(uri, str):
         raise InvalidBitcoinURI(f"expected string, not {repr(uri)}")
 
-#    if ':' not in uri:
-#        if not bitcoin.is_address(uri):
-#            raise InvalidBitcoinURI("Not a ELCASH address")
-#        return {'address': uri}
-
     u = urllib.parse.urlparse(uri)
-#    if u.scheme.lower() != BITCOIN_BIP21_URI_SCHEME:
-#        raise InvalidBitcoinURI("Not a ELCASH URI")
     address = u.path
 
     # python for android fails to parse query
