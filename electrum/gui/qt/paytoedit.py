@@ -30,7 +30,7 @@ from typing import NamedTuple, Sequence, Optional, List, TYPE_CHECKING
 from PyQt5.QtGui import QFontMetrics, QFont
 
 from electrum import bitcoin
-from electrum.util import bfh, maybe_extract_bolt11_invoice, BITCOIN_BIP21_URI_SCHEME
+from electrum.util import bfh, maybe_extract_bolt11_invoice
 from electrum.transaction import PartialTxOutput
 from electrum.bitcoin import opcodes, construct_script
 from electrum.logging import Logger

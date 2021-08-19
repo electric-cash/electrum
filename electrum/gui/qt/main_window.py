@@ -59,9 +59,9 @@ from electrum.util import (format_time,
                            bh2u, bfh, InvalidPassword,
                            UserFacingException,
                            get_new_wallet_name, send_exception_to_crash_reporter,
-                           InvalidBitcoinURI, maybe_extract_bolt11_invoice, NotEnoughFunds,
+                           InvalidElcashURI, maybe_extract_bolt11_invoice, NotEnoughFunds,
                            NoDynamicFeeEstimates, MultipleSpendMaxTxOutputs,
-                           AddTransactionException, BITCOIN_BIP21_URI_SCHEME)
+                           AddTransactionException)
 from electrum.invoices import PR_TYPE_ONCHAIN, PR_TYPE_LN, PR_DEFAULT_EXPIRATION_WHEN_CREATING, Invoice
 from electrum.invoices import PR_PAID, get_pr_expiration_values, LNInvoice, OnchainInvoice
 from electrum.transaction import (Transaction, PartialTxInput,
@@ -1932,7 +1932,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             return
         try:
             out = util.parse_URI(URI, self.on_pr)
-        except InvalidBitcoinURI as e:
+        except InvalidElcashURI as e:
             self.show_error(_("Error parsing URI") + f":\n{e}")
             return
         self.show_send_tab()
