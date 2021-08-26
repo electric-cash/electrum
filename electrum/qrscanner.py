@@ -28,7 +28,7 @@ import sys
 import ctypes
 
 from .logging import get_logger
-
+from typing import Optional, Mapping
 
 _logger = get_logger(__name__)
 
@@ -77,7 +77,7 @@ def scan_barcode(device='', timeout=-1, display=True, threaded=False):
     data = libzbar.zbar_symbol_get_data(symbol)
     return data.decode('utf8')
 
-def _find_system_cameras():
+def find_system_cameras() -> Mapping[str, str]:
     device_root = "/sys/class/video4linux"
     devices = {} # Name -> device
     if os.path.exists(device_root):
