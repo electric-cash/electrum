@@ -269,11 +269,12 @@ class PayToEdit(CompletionTextEdit, ScanQRTextEdit, Logger):
         self.setMaximumHeight(h)
         self.verticalScrollBar().hide()
 
-    def qr_input(self):
-        data = super(PayToEdit,self).qr_input()
-        if data.find('?') > 0:
-            self.win.pay_to_URI(data)
-            # TODO: update fee
+    def qr_input(self, *, callback=None):
+        def _on_qr_success(data):
+            if data.find('?') > 0:
+                self.win.pay_to_URI(data)
+                # TODO: update fee
+        super(PayToEdit, self).qr_input(callback=_on_qr_success)
 
     def resolve(self):
         self.is_alias = False
