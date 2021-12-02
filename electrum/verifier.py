@@ -76,7 +76,13 @@ class SPV(NetworkJobOnDefaultServer):
         local_height = self.blockchain.height()
         unverified = self.wallet.get_unverified_txs()
 
-        for tx_hash, tx_height in unverified.items():
+        for tx_hash in unverified:
+            # set NONE tx_type if tx_type not exist in unverified items
+            tx_type = TxType.NONE
+            if isinstance(unverified[tx_hash], tuple):
+                tx_height, tx_type = unverified[tx_hash]
+            else:
+                tx_height = unverified[tx_hash]
             # do not request merkle branch if we already requested it
             if tx_hash in self.requested_merkle or tx_hash in self.merkle_roots:
                 continue
@@ -92,9 +98,9 @@ class SPV(NetworkJobOnDefaultServer):
             # request now
             self.logger.info(f'requested merkle {tx_hash}')
             self.requested_merkle.add(tx_hash)
-            await self.taskgroup.spawn(self._request_and_verify_single_proof, tx_hash, tx_height)
+            await self.taskgroup.spawn(self._request_and_verify_single_proof, tx_hash, tx_height, tx_type)
 
-    async def _request_and_verify_single_proof(self, tx_hash, tx_height):
+    async def _request_and_verify_single_proof(self, tx_hash, tx_height, tx_type):
         try:
             merkle = await self.network.get_merkle_for_transaction(tx_hash, tx_height)
         except UntrustedServerReturnedError as e:
@@ -131,7 +137,8 @@ class SPV(NetworkJobOnDefaultServer):
         tx_info = TxMinedInfo(height=tx_height,
                               timestamp=header.get('timestamp'),
                               txpos=pos,
-                              header_hash=header_hash)
+                              header_hash=header_hash,
+                              tx_type=tx_type)
         self.wallet.add_verified_tx(tx_hash, tx_info)
 
     @classmethod

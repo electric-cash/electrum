@@ -1007,13 +1007,14 @@ def ignore_exceptions(func):
     return wrapper
 
 
-class TxMinedInfo(NamedTuple):
-    height: int                        # height of block that mined tx
-    conf: Optional[int] = None         # number of confirmations, SPV verified (None means unknown)
-    timestamp: Optional[int] = None    # timestamp of block that mined tx
-    txpos: Optional[int] = None        # position of tx in serialized block
-    header_hash: Optional[str] = None  # hash of block that mined tx
-    txtype: Optional[str] = TxType.NONE.name  # type of tx
+class  TxMinedInfo(NamedTuple):
+    height: int                                 # height of block that mined tx
+    conf: Optional[int] = None                  # number of confirmations, SPV verified (None means unknown)
+    timestamp: Optional[int] = None             # timestamp of block that mined tx
+    txpos: Optional[int] = None                 # position of tx in serialized block
+    header_hash: Optional[str] = None           # hash of block that mined tx
+    txtype: str = TxType.NONE.name              # type of tx
+    staking_info: Optional['StakingInfo'] = None  # tx staking info (if applicable)
 
 
 def make_aiohttp_session(proxy: Optional[dict], headers=None, timeout=None):

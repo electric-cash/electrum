@@ -62,10 +62,22 @@ class StakingDepositTx(TypeAwareTransaction):
     MIN_STAKING_AMOUNT = 5 * bitcoin.COIN
     NUM_STAKING_PERIODS = 4
 
+    def __init__(self, raw: str, tx_type: TxType):
+        super().__init__(raw, tx_type)
+
     @property
     def is_staking_tx(self) -> bool:
         return True
 
+    def update_staking_info(self, network):
+        # can raise network exception
+        staking_info = network.run_from_another_thread(
+            network.get_stake(self.txid(), timeout=10)
+        )
+
+        self._staking_info = StakingInfo(**staking_info)
+
+    @property
     def staking_info(self) -> StakingInfo:
         return self._staking_info
 
@@ -98,6 +110,4 @@ class StakingDepositTx(TypeAwareTransaction):
 
         raw = tx.serialize()
         print(f'tx: {tx.txid()} is staking deposit')
-        # self.staking_output = tx.outputs()[outputindex]
-
         return cls(raw, TxType.STAKING_DEPOSIT)

@@ -81,6 +81,7 @@ from .mnemonic import Mnemonic
 from .logging import get_logger
 from .lnworker import LNWallet, LNBackups
 from .paymentrequest import PaymentRequest
+from .staking.tx_type import TxType
 from .util import read_json_file, write_json_file, UserFacingException
 
 if TYPE_CHECKING:
@@ -701,6 +702,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                 'date': timestamp_to_datetime(hist_item.tx_mined_status.timestamp),
                 'label': self.get_label_for_txid(hist_item.txid),
                 'txpos_in_block': hist_item.tx_mined_status.txpos,
+                'staking_info': hist_item.tx_mined_status.staking_info,
             }
 
     def create_invoice(self, *, outputs: List[PartialTxOutput], message, pr, URI) -> Invoice:
@@ -869,6 +871,11 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         lnworker_history = self.lnworker.get_onchain_history() if self.lnworker and include_lightning else {}
         for tx_item in onchain_history:
             txid = tx_item['txid']
+            if self.network:
+                tx = self.db.get_transaction(txid)
+                if tx.tx_type == TxType.STAKING_DEPOSIT:
+                    tx.update_staking_info(self.network)
+                    tx_item['staking_info'] = tx.staking_info
             transactions_tmp[txid] = tx_item
             # add lnworker info here
             if txid in lnworker_history:
@@ -1680,6 +1687,31 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                 if k.can_sign_txin(txin):
                     return True
         return False
+
+    def update_stakes(self):
+        if self.network and self.network.has_internet_connection():
+            try:
+                txs = self.db.list_transactions()
+                for txid in txs:
+                    tx = self.db.get_transaction(txid)
+                    if not tx:
+                        continue
+                    if not hasattr(tx, 'tx_type'):
+                        self.logger.warning(f'tx_type not found in {tx.txid()} but it should be there')
+                        continue
+                    # TODO: use filter in future when verbose logging won't be required
+                    # filter(lambda tx: tx.tx_type...)
+                    if tx.tx_type == TxType.STAKING_DEPOSIT:
+                        tx.update_staking_info(self.network)
+
+            except NetworkException as e:
+                self.logger.info(f'got network eror: {repr(e)}. '
+                                 f'if you are intentionally offline, consider using the --offline flag')
+                if not ignore_network_issues:
+                    raise e
+            else:
+                self.logger.info(f'staking transaction statuses updated!')
+
 
     def get_input_tx(self, tx_hash, *, ignore_network_issues=False) -> Optional[Transaction]:
         # First look up an input transaction in the wallet where it

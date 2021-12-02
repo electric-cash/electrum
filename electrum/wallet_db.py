@@ -1181,6 +1181,7 @@ class WalletDB(JsonDB):
                     self.logger.info("removing unreferenced spent outpoint")
                     d.pop(prevout_n)
 
+        # TODO: Move two below method calls to self.upgrade under specific walletdb upgrade revision
         self._upgrade_tx_to_type_aware_tx()
         self._upgrade_verifier_by_tx_type()
 

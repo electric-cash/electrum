@@ -297,6 +297,7 @@ class StakingNode(CustomNode):
                 tx_mined_info = self.model.tx_mined_info_from_tx_item(tx_item)
                 status, status_str = window.wallet.get_tx_status(tx_hash, tx_mined_info)
 
+        staking_info = tx_item.get('staking_info', None)
         if role == Qt.UserRole:
             # for sorting
             d = {
@@ -307,11 +308,12 @@ class StakingNode(CustomNode):
                     (tx_item['bc_value'].value if 'bc_value' in tx_item else 0)\
                     + (tx_item['ln_value'].value if 'ln_value' in tx_item else 0),
                 StakingColumns.STAKING_PERIOD:
-                    (tx_item['balance'].value if 'balance' in tx_item else 0),
+                    staking_info.deposit_height if hasattr(staking_info, 'deposit_height') else None,
                 StakingColumns.BLOCKS_LEFT:
-                    tx_item['fiat_value'].value if 'fiat_value' in tx_item else None,
+                    #TODO: do some math on values so we get 'blocks left' instead of deposit height/staking_period
+                    staking_info.staking_period if hasattr(staking_info, 'staking_period') else None,
                 StakingColumns.TYPE:
-                    tx_item['tx_type'].value if 'tx_type' in tx_item else None,
+                    staking_info.tx_type if hasattr(staking_info, 'tx_type') else None,
             }
             return QVariant(d[col])
         if role not in (Qt.DisplayRole, Qt.EditRole):
@@ -344,17 +346,15 @@ class StakingNode(CustomNode):
             return QVariant()
         if col == StakingColumns.STATUS_WITH_DATE:
             return QVariant(status_str)
-        elif col == StakingColumns.STAKING_PERIOD:
-            period = tx_item['staking_period'].value if 'staking_period' in tx_item else 'Unknown LoL'
+        elif col == StakingColumns.STAKING_PERIOD and hasattr(staking_info, 'staking_period'):
+            period = staking_info.staking_period
             return QVariant(period)
-        elif col == StakingColumns.AMOUNT and 'staking_amount' in tx_item:
-            staking_amount = tx_item['staking_amount'].value if 'bc_value' in tx_item else 0
-            staking_amount_str = window.format_amount(staking_amount, is_diff=True, whitespaces=True)
-            return QVariant(staking_amount_str)
+        elif col == StakingColumns.AMOUNT and hasattr(staking_info, 'staking_amount'):
+            staking_amount = staking_info.staking_amount
+            return QVariant(staking_amount)
 
-        elif col == StakingColumns.TYPE and 'tx_type' in tx_item:
-            value_str = window.fx.format_fiat(tx_item['fiat_value'].value)
-            return QVariant(tx_item['tx_type'])
+        elif col == StakingColumns.TYPE:
+            return QVariant('Coming soon')
         # elif col == StakingColumns.TXID:
         #     return QVariant(tx_hash) if not is_lightning else QVariant('')
         return QVariant()

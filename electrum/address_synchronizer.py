@@ -26,6 +26,7 @@ import threading
 import asyncio
 import itertools
 from collections import defaultdict
+from copy import deepcopy
 from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, NamedTuple, Sequence, List
 
 from . import bitcoin, util
@@ -575,6 +576,11 @@ class AddressSynchronizer(Logger):
                 self.unverified_tx.pop(tx_hash, None)
 
     def add_verified_tx(self, tx_hash: str, info: TxMinedInfo):
+        # TODO: I'm not sure if its the right place to add it here...
+        if info.txtype and TxType.from_str(info.txtype) == TxType.STAKING_DEPOSIT:
+            tx = self.db.get_transaction(tx_hash)
+            tx.update_staking_info(self.network)
+            info.staking_info = tx.staking_info
         # Remove from the unverified map and add to the verified map
         with self.lock:
             self.unverified_tx.pop(tx_hash, None)
@@ -585,7 +591,7 @@ class AddressSynchronizer(Logger):
     def get_unverified_txs(self):
         '''Returns a map from tx hash to transaction height'''
         with self.lock:
-            return dict(self.unverified_tx)  # copy
+            return deepcopy(self.unverified_tx)  # copy
 
     def undo_verifications(self, blockchain, above_height):
         '''Used by the verifier when a reorg has happened'''
