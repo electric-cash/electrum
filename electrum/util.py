@@ -56,6 +56,7 @@ import dns.resolver
 
 from .i18n import _
 from .logging import get_logger, Logger
+from .staking.tx_type import TxType
 
 if TYPE_CHECKING:
     from .network import Network
@@ -1012,6 +1013,7 @@ class TxMinedInfo(NamedTuple):
     timestamp: Optional[int] = None    # timestamp of block that mined tx
     txpos: Optional[int] = None        # position of tx in serialized block
     header_hash: Optional[str] = None  # hash of block that mined tx
+    txtype: Optional[str] = TxType.NONE.name  # type of tx
 
 
 def make_aiohttp_session(proxy: Optional[dict], headers=None, timeout=None):

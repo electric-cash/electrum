@@ -50,6 +50,7 @@ from .i18n import _
 from .bip32 import BIP32Node, convert_bip32_intpath_to_strpath, convert_bip32_path_to_list_of_uint32
 from .crypto import sha256
 from . import util
+from .staking.utils import get_tx_type_aware_tx_status
 from .util import (NotEnoughFunds, UserCancelled, profiler,
                    format_satoshis, format_fee_satoshis, NoDynamicFeeEstimates,
                    WalletFileException, BitcoinException, MultipleSpendMaxTxOutputs,
@@ -904,6 +905,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             # note: 'value' and 'balance' has msat precision (as LN has msat precision)
             item['value'] = Satoshis(value)
             balance += value
+            # TODO: differentiate by tx type and adjust item['balance'] accordingly
             item['balance'] = Satoshis(balance)
             if fx and fx.is_enabled() and fx.get_history_config():
                 txid = item.get('txid')
@@ -1088,7 +1090,13 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         status_str = transaction_statuses[status] if status < 4 else time_str
         if extra:
             status_str += ' [%s]'%(', '.join(extra))
-        return status, status_str
+        return get_tx_type_aware_tx_status(
+            tx_hash=tx_hash,
+            tx_mined_info=tx_mined_info,
+            status=status,
+            status_str=status_str,
+            db=self.db
+        )
 
     def relayfee(self):
         return relayfee(self.network)
@@ -2390,7 +2398,7 @@ class Imported_Wallet(Simple_Wallet):
             for addr in self.db.get_history():
                 details = self.get_address_history(addr)
                 if addr == address:
-                    for tx_hash, height in details:
+                    for tx_hash, height, *__ in details:
                         transactions_to_remove.add(tx_hash)
                 else:
                     for tx_hash, height in details:
