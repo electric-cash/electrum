@@ -85,7 +85,8 @@ class StakingColumns(IntEnum):
     AMOUNT = 1
     STAKING_PERIOD = 2
     BLOCKS_LEFT = 3
-    TYPE = 4
+    STATUS = 4
+    TXTYPE = 5
 
 
 class StakingSortFilterModel(QSortFilterProxyModel):
@@ -106,12 +107,7 @@ class StakingSortFilterModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         result = super().filterAcceptsRow(source_row, source_parent)
         idx = self.sourceModel().index(source_row, 0, source_parent)
-        if self.sourceModel().hasChildren(idx):
-            num_items = self.sourceModel().rowCount(idx)
-            for i in range(num_items):
-                result = result or self.filterAcceptsRow(i, idx)
-        print(f'source_row: {source_row}, source_parent: {source_parent.data(Qt.UserRole)}, idx: {idx.data(Qt.UserRole)} data: {self.sourceModel().data(idx, Qt.UserRole)}')
-        return result or TxType.NONE == self.sourceModel().data(idx, Qt.UserRole)
+        return result and TxType.STAKING_DEPOSIT.name == self.sourceModel().data(idx.siblingAtColumn(StakingColumns.TXTYPE), Qt.DisplayRole).value()
 
 
 class StakingModel(CustomModel, Logger):
@@ -123,20 +119,13 @@ class StakingModel(CustomModel, Logger):
         self.transactions = OrderedDictWithIndex()
         self.tx_status_cache = {}  # type: Dict[str, Tuple[int, str]]
 
-    # def update_label(self, index):
-    #     tx_item = index.internalPointer().get_data()
-    #     tx_item['label'] = self.parent.wallet.get_label_for_txid(get_item_key(tx_item))
-    #     topLeft = bottomRight = self.createIndex(index.row(), HistoryColumns.DESCRIPTION)
-    #     self.dataChanged.emit(topLeft, bottomRight, [Qt.DisplayRole])
-    #     self.parent.utxo_list.update()
-
     def get_domain(self):
         """Overridden in address_dialog.py"""
         return self.parent.wallet.get_addresses()
 
     def should_include_lightning_payments(self) -> bool:
         """Overridden in address_dialog.py"""
-        return True
+        return False
 
     @profiler
     def refresh(self, reason: str):
@@ -196,7 +185,6 @@ class StakingModel(CustomModel, Logger):
                     if 'fiat_value' in tx_item:
                         parent._data['fiat_value'] += tx_item['fiat_value']
                     if tx_item.get('txid') == group_id:
-                        parent._data['lightning'] = False
                         parent._data['txid'] = tx_item['txid']
                         parent._data['timestamp'] = tx_item['timestamp']
                         parent._data['height'] = tx_item['height']
@@ -210,9 +198,8 @@ class StakingModel(CustomModel, Logger):
         # update tx_status_cache
         self.tx_status_cache.clear()
         for txid, tx_item in self.transactions.items():
-            if not tx_item.get('lightning', False):
-                tx_mined_info = self.tx_mined_info_from_tx_item(tx_item)
-                self.tx_status_cache[txid] = self.parent.wallet.get_tx_status(txid, tx_mined_info)
+            tx_mined_info = self.tx_mined_info_from_tx_item(tx_item)
+            self.tx_status_cache[txid] = self.parent.wallet.get_tx_status(txid, tx_mined_info)
 
     def update_fiat(self, idx):
         tx_item = idx.internalPointer().get_data()
@@ -240,16 +227,6 @@ class StakingModel(CustomModel, Logger):
         bottomRight = self.createIndex(row, len(StakingColumns) - 1)
         self.dataChanged.emit(topLeft, bottomRight)
 
-    def on_fee_histogram(self):
-        for tx_hash, tx_item in list(self.transactions.items()):
-            if tx_item.get('lightning'):
-                continue
-            tx_mined_info = self.tx_mined_info_from_tx_item(tx_item)
-            if tx_mined_info.conf > 0:
-                # note: we could actually break here if we wanted to rely on the order of txns in self.transactions
-                continue
-            self.update_tx_mined_status(tx_hash, tx_mined_info)
-
     def headerData(self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole):
         assert orientation == Qt.Horizontal
         if role != Qt.DisplayRole:
@@ -259,14 +236,19 @@ class StakingModel(CustomModel, Logger):
             StakingColumns.AMOUNT: _('Amount'),
             StakingColumns.STAKING_PERIOD: _('Period'),
             StakingColumns.BLOCKS_LEFT: _('Blocks left'),
-            StakingColumns.TYPE: _('Type'),
+            StakingColumns.STATUS: _('Type'),
+            StakingColumns.TXTYPE: _('Tx Type'),
         }[section]
 
     @staticmethod
     def tx_mined_info_from_tx_item(tx_item):
-        tx_mined_info = TxMinedInfo(height=tx_item['height'],
-                                    conf=tx_item['confirmations'],
-                                    timestamp=tx_item['timestamp'])
+        tx_mined_info = TxMinedInfo(
+            height=tx_item['height'],
+            conf=tx_item['confirmations'],
+            timestamp=tx_item['timestamp'],
+            txtype=tx_item['txtype'],
+            staking_info=tx_item['staking_info']
+        )
         return tx_mined_info
 
 
@@ -280,70 +262,56 @@ class StakingNode(CustomNode):
         col = index.column()
         window = self.model.parent
         tx_item = self.get_data()
-        is_lightning = tx_item.get('lightning', False)
         timestamp = tx_item['timestamp']
-        if is_lightning:
-            status = 0
-            if timestamp is None:
-                status_str = _('unconfirmed')
-            else:
-                status_str = format_time(int(timestamp))
-        else:
-            tx_hash = tx_item['txid']
-            conf = tx_item['confirmations']
-            try:
-                status, status_str = self.model.tx_status_cache[tx_hash]
-            except KeyError:
-                tx_mined_info = self.model.tx_mined_info_from_tx_item(tx_item)
-                status, status_str = window.wallet.get_tx_status(tx_hash, tx_mined_info)
+        tx_hash = tx_item['txid']
+        conf = tx_item['confirmations']
+        try:
+            status, status_str = self.model.tx_status_cache[tx_hash]
+        except KeyError:
+            tx_mined_info = self.model.tx_mined_info_from_tx_item(tx_item)
+            status, status_str = window.wallet.get_tx_status(tx_hash, tx_mined_info)
 
         staking_info = tx_item.get('staking_info', None)
         if role == Qt.UserRole:
             # for sorting
             d = {
                 StakingColumns.STATUS_WITH_DATE:
-                    # respect sort order of self.transactions (wallet.get_full_history)
+                # respect sort order of self.transactions (wallet.get_full_history)
                     -index.row(),
                 StakingColumns.AMOUNT:
-                    (tx_item['bc_value'].value if 'bc_value' in tx_item else 0)\
+                    (tx_item['bc_value'].value if 'bc_value' in tx_item else 0) \
                     + (tx_item['ln_value'].value if 'ln_value' in tx_item else 0),
                 StakingColumns.STAKING_PERIOD:
                     staking_info.deposit_height if hasattr(staking_info, 'deposit_height') else None,
                 StakingColumns.BLOCKS_LEFT:
-                    #TODO: do some math on values so we get 'blocks left' instead of deposit height/staking_period
+                #TODO: do some math on values so we get 'blocks left' instead of deposit height/staking_period
                     staking_info.staking_period if hasattr(staking_info, 'staking_period') else None,
-                StakingColumns.TYPE:
+                StakingColumns.STATUS:
+                    'Coming soon :)',
+                StakingColumns.TXTYPE:
                     staking_info.tx_type if hasattr(staking_info, 'tx_type') else None,
             }
             return QVariant(d[col])
         if role not in (Qt.DisplayRole, Qt.EditRole):
             if col == StakingColumns.STATUS_WITH_DATE and role == Qt.DecorationRole:
-                icon = "lightning" if is_lightning else TX_ICONS[status]
+                icon = TX_ICONS[status]
                 return QVariant(read_QIcon(icon))
             elif col == StakingColumns.STATUS_WITH_DATE and role == Qt.ToolTipRole:
-                if is_lightning:
-                    msg = 'lightning transaction'
-                else:  # on-chain
-                    if tx_item['height'] == TX_HEIGHT_LOCAL:
-                        # note: should we also explain double-spends?
-                        msg = _("This transaction is only available on your local machine.\n"
-                                "The currently connected server does not know about it.\n"
-                                "You can either broadcast it now, or simply remove it.")
-                    else:
-                        msg = str(conf) + _(" confirmation" + ("s" if conf != 1 else ""))
+                if tx_item['height'] == TX_HEIGHT_LOCAL:
+                    # note: should we also explain double-spends?
+                    msg = _("This transaction is only available on your local machine.\n"
+                            "The currently connected server does not know about it.\n"
+                            "You can either broadcast it now, or simply remove it.")
+                else:
+                    msg = str(conf) + _(" confirmation" + ("s" if conf != 1 else ""))
                 return QVariant(msg)
             elif col > StakingColumns.STATUS_WITH_DATE and role == Qt.TextAlignmentRole:
                 return QVariant(int(Qt.AlignRight | Qt.AlignVCenter))
             elif col > StakingColumns.STATUS_WITH_DATE and role == Qt.FontRole:
                 monospace_font = QFont(MONOSPACE_FONT)
                 return QVariant(monospace_font)
-            #elif col == HistoryColumns.DESCRIPTION and role == Qt.DecorationRole and not is_lightning\
-            #        and self.parent.wallet.invoices.paid.get(tx_hash):
-            #    return QVariant(read_QIcon("seal"))
-            elif col == StakingColumns.AMOUNT and role == Qt.ForegroundRole and tx_item['value'].value < 0:
-                red_brush = QBrush(QColor("#BC1E1E"))
-                return QVariant(red_brush)
             return QVariant()
+
         if col == StakingColumns.STATUS_WITH_DATE:
             return QVariant(status_str)
         elif col == StakingColumns.STAKING_PERIOD and hasattr(staking_info, 'staking_period'):
@@ -353,10 +321,10 @@ class StakingNode(CustomNode):
             staking_amount = staking_info.staking_amount
             return QVariant(staking_amount)
 
-        elif col == StakingColumns.TYPE:
-            return QVariant('Coming soon')
-        # elif col == StakingColumns.TXID:
-        #     return QVariant(tx_hash) if not is_lightning else QVariant('')
+        elif col == StakingColumns.STATUS:
+            return QVariant('Coming soon...')
+        elif col == StakingColumns.TXTYPE:
+            return QVariant(tx_item['txtype'])
         return QVariant()
 
 
@@ -364,7 +332,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
     filter_columns = [StakingColumns.STATUS_WITH_DATE,
                       StakingColumns.STAKING_PERIOD,
                       StakingColumns.AMOUNT,
-                      StakingColumns.TYPE]
+                      StakingColumns.STATUS]
 
     def tx_item_from_proxy_row(self, proxy_row):
         hm_idx = self.model().mapToSource(self.model().index(proxy_row, 0))
@@ -544,7 +512,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
         index = self.model().mapToSource(index)
         tx_item = index.internalPointer().get_data()
         column = index.column()
-        key = get_item_key(tx_item)
+        key = tx_item.get('txid')
         if column == StakingColumns.DESCRIPTION:
             if self.wallet.set_label(key, text): #changed
                 # self.hm.update_label(index)
@@ -565,10 +533,6 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
         if self.model().mapToSource(idx).column() in self.editable_columns:
             super().mouseDoubleClickEvent(event)
         else:
-            if tx_item.get('lightning'):
-                if tx_item['type'] == 'payment':
-                    self.parent.show_lightning_transaction(tx_item)
-                return
             tx_hash = tx_item['txid']
             tx = self.wallet.db.get_transaction(tx_hash)
             if not tx:
@@ -601,19 +565,8 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
             # can happen e.g. before list is populated for the first time
             return
         tx_item = idx.internalPointer().get_data()
-        if tx_item.get('lightning') and tx_item['type'] == 'payment':
-            menu = QMenu()
-            menu.addAction(_("View Payment"), lambda: self.parent.show_lightning_transaction(tx_item))
-            cc = self.add_copy_menu(menu, idx)
-            cc.addAction(_("Payment Hash"), lambda: self.place_text_on_clipboard(tx_item['payment_hash'], title="Payment Hash"))
-            cc.addAction(_("Preimage"), lambda: self.place_text_on_clipboard(tx_item['preimage'], title="Preimage"))
-            menu.exec_(self.viewport().mapToGlobal(position))
-            return
         tx_hash = tx_item['txid']
-        if tx_item.get('lightning'):
-            tx = self.wallet.lnworker.lnwatcher.db.get_transaction(tx_hash)
-        else:
-            tx = self.wallet.db.get_transaction(tx_hash)
+        tx = self.wallet.db.get_transaction(tx_hash)
         if not tx:
             return
         tx_URL = block_explorer_URL(self.config, 'tx', tx_hash)
@@ -743,6 +696,6 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
     def get_text_and_userrole_from_coordinate(self, row, col):
         idx = self.model().mapToSource(self.model().index(row, col))
         tx_item = idx.internalPointer().get_data()
-        return self.sm.data(idx, Qt.DisplayRole).value(), get_item_key(tx_item)
+        return self.sm.data(idx, Qt.DisplayRole).value(), tx_item.get('txid')
 
 

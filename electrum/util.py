@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from .network import Network
     from .interface import Interface
     from .simple_config import SimpleConfig
+    from .staking.transaction import StakingInfo
 
 _logger = get_logger(__name__)
 
@@ -1007,7 +1008,7 @@ def ignore_exceptions(func):
     return wrapper
 
 
-class  TxMinedInfo(NamedTuple):
+class TxMinedInfo(NamedTuple):
     height: int                                 # height of block that mined tx
     conf: Optional[int] = None                  # number of confirmations, SPV verified (None means unknown)
     timestamp: Optional[int] = None             # timestamp of block that mined tx

@@ -1,8 +1,11 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, TYPE_CHECKING
 
 from .transaction import TypeAwareTransaction
 from .tx_type import TxType
 from ..wallet_db import WalletDB
+
+if TYPE_CHECKING:
+    from electrum.util import TxMinedInfo
 
 TX_STATUS_INDEX_OFFSET = 10
 TX_TYPES_LIKE_STANDARD = (

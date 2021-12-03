@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Dict, Optional, Set, Tuple, NamedTuple, Sequen
 from . import bitcoin, util
 from .bitcoin import COINBASE_MATURITY
 from .staking.tx_type import TxType
+from .staking.transaction import TypeAwareTransaction, StakingInfo
 from .util import profiler, bfh, TxMinedInfo, UnrelatedTransactionException
 from .transaction import Transaction, TxOutput, TxInput, PartialTxInput, TxOutpoint, PartialTransaction
 from .synchronizer import Synchronizer
@@ -137,7 +138,7 @@ class AddressSynchronizer(Logger):
             related_txns = self._history_local.get(addr, set())
             for tx_hash in related_txns:
                 mined_info = self.get_tx_height(tx_hash)
-                h.append((tx_hash, mined_info.height, mined_info.txtype))
+                h.append((tx_hash, mined_info.height, TxType.from_str(mined_info.txtype), mined_info.staking_info))
         return h
 
     def get_address_history_len(self, addr: str) -> int:
@@ -396,8 +397,8 @@ class AddressSynchronizer(Logger):
     def receive_history_callback(self, addr: str, hist, tx_fees: Dict[str, int]):
         with self.lock:
             old_hist = self.get_address_history(addr)
-            for tx_hash, height, tx_type in old_hist:
-                if (tx_hash, height, tx_type) not in hist:
+            for tx_hash, height, txtype, staking_info in old_hist:
+                if (tx_hash, height, txtype, staking_info) not in hist:
                     # make tx local
                     self.unverified_tx.pop(tx_hash, None)
                     self.db.remove_verified_tx(tx_hash)
@@ -405,24 +406,26 @@ class AddressSynchronizer(Logger):
                         self.verifier.remove_spv_proof_for_tx(tx_hash)
             self.db.set_addr_history(addr, hist)
 
-        for tx_hash, tx_height, tx_type in hist:
+        for tx_hash, tx_height, txtype, staking_info in hist:
             # add it in case it was previously unconfirmed
-            self.add_unverified_tx(tx_hash, tx_height, tx_type)
+            self.add_unverified_tx(tx_hash, tx_height, txtype)
             # if addr is new, we have to recompute txi and txo
             tx = self.db.get_transaction(tx_hash)
             if tx is None:
                 continue
-            self._mutate_transaction_type(current_tx=tx, incoming_type=TxType.from_str(tx_type))
+            self._mutate_transaction_type(current_tx=tx, incoming_type=TxType.from_str(txtype), staking_info=staking_info)
             self.add_transaction(tx, allow_unrelated=True)
 
         # Store fees
         for tx_hash, fee_sat in tx_fees.items():
             self.db.add_tx_fee_from_server(tx_hash, fee_sat)
 
-    def _mutate_transaction_type(self, current_tx: 'TypeAwareTransaction', incoming_type: TxType):
+    def _mutate_transaction_type(self, current_tx: 'TypeAwareTransaction', incoming_type: TxType, staking_info: dict):
         current_tx_type = current_tx.tx_type
         if incoming_type != current_tx_type:
             current_tx.tx_type = incoming_type
+        if current_tx.tx_type == TxType.STAKING_DEPOSIT:
+            current_tx.staking_info = StakingInfo(**staking_info)
 
     @profiler
     def load_local_history(self):
@@ -576,11 +579,6 @@ class AddressSynchronizer(Logger):
                 self.unverified_tx.pop(tx_hash, None)
 
     def add_verified_tx(self, tx_hash: str, info: TxMinedInfo):
-        # TODO: I'm not sure if its the right place to add it here...
-        if info.txtype and TxType.from_str(info.txtype) == TxType.STAKING_DEPOSIT:
-            tx = self.db.get_transaction(tx_hash)
-            tx.update_staking_info(self.network)
-            info.staking_info = tx.staking_info
         # Remove from the unverified map and add to the verified map
         with self.lock:
             self.unverified_tx.pop(tx_hash, None)
@@ -639,10 +637,10 @@ class AddressSynchronizer(Logger):
             verified_tx_mined_info = self.db.get_verified_tx(tx_hash)
             if verified_tx_mined_info:
                 conf = max(self.get_local_height() - verified_tx_mined_info.height + 1, 0)
-                return verified_tx_mined_info._replace(conf=conf, txtype=verified_tx_mined_info.txtype)
+                return verified_tx_mined_info._replace(conf=conf, txtype=verified_tx_mined_info.txtype, staking_info=verified_tx_mined_info.staking_info)
             elif tx_hash in self.unverified_tx:
-                height, tx_type = self.unverified_tx[tx_hash]
-                return TxMinedInfo(height=height, conf=0, txtype=tx_type)
+                height, txtype = self.unverified_tx[tx_hash]
+                return TxMinedInfo(height=height, conf=0, txtype=txtype)
             elif tx_hash in self.future_tx:
                 num_blocks_remainining = self.future_tx[tx_hash]
                 assert num_blocks_remainining > 0, num_blocks_remainining

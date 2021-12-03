@@ -986,19 +986,20 @@ class WalletDB(JsonDB):
         assert isinstance(txid, str)
         if txid not in self.verified_tx:
             return None
-        height, timestamp, txpos, header_hash, txtype = self.verified_tx[txid]
+        height, timestamp, txpos, header_hash, txtype, staking_info = self.verified_tx[txid]
         return TxMinedInfo(height=height,
                            conf=None,
                            timestamp=timestamp,
                            txpos=txpos,
                            header_hash=header_hash,
-                           txtype=txtype)
+                           txtype=txtype,
+                           staking_info=staking_info)
 
     @modifier
     def add_verified_tx(self, txid: str, info: TxMinedInfo):
         assert isinstance(txid, str)
         assert isinstance(info, TxMinedInfo)
-        self.verified_tx[txid] = (info.height, info.timestamp, info.txpos, info.header_hash, info.txtype)
+        self.verified_tx[txid] = (info.height, info.timestamp, info.txpos, info.header_hash, info.txtype, info.staking_info)
 
     @modifier
     def remove_verified_tx(self, txid: str):
@@ -1212,6 +1213,17 @@ class WalletDB(JsonDB):
     def _upgrade_single_tx(self, tx: Transaction) -> TypeAwareTransaction:
         type_aware_tx = TypeAwareTransaction.from_tx(tx)
         self.transactions[type_aware_tx.txid()] = type_aware_tx
+        if tx.txid() in self.verified_tx.keys():
+            existing_verified_tx = self.verified_tx[tx.txid()]
+            info = TxMinedInfo(
+                height=existing_verified_tx[0],
+                timestamp=existing_verified_tx[1],
+                txpos=existing_verified_tx[2],
+                header_hash=existing_verified_tx[3],
+                txtype=type_aware_tx.tx_type.name,
+                staking_info=existing_verified_tx[5] if len(existing_verified_tx) > 5 else None
+            )
+            self.add_verified_tx(tx.txid(), info)
         return type_aware_tx
 
     def _upgrade_verifier_by_tx_type(self):

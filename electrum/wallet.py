@@ -871,8 +871,9 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         lnworker_history = self.lnworker.get_onchain_history() if self.lnworker and include_lightning else {}
         for tx_item in onchain_history:
             txid = tx_item['txid']
+            tx = self.db.get_transaction(txid)
+            tx_item['txtype'] = tx.tx_type.name
             if self.network:
-                tx = self.db.get_transaction(txid)
                 if tx.tx_type == TxType.STAKING_DEPOSIT:
                     tx.update_staking_info(self.network)
                     tx_item['staking_info'] = tx.staking_info
@@ -1363,7 +1364,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         max_conf = -1
         h = self.db.get_addr_history(address)
         needs_spv_check = not self.config.get("skipmerklecheck", False)
-        for tx_hash, tx_height in h:
+        for tx_hash, tx_height, *__ in h:
             if needs_spv_check:
                 tx_age = self.get_tx_height(tx_hash).conf
             else:
@@ -1688,7 +1689,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                     return True
         return False
 
-    def update_stakes(self):
+    def update_stakes(self, *, ignore_network_issues=False):
         if self.network and self.network.has_internet_connection():
             try:
                 txs = self.db.list_transactions()

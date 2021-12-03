@@ -75,11 +75,17 @@ class StakingDepositTx(TypeAwareTransaction):
             network.get_stake(self.txid(), timeout=10)
         )
 
-        self._staking_info = StakingInfo(**staking_info)
+        self.staking_info = StakingInfo(**staking_info)
 
     @property
     def staking_info(self) -> StakingInfo:
         return self._staking_info
+
+    @staking_info.setter
+    def staking_info(self, staking_info: StakingInfo):
+        if not isinstance(staking_info, StakingInfo):
+            raise ValueError(f'staking_info has to be StakingInfo not {type(staking_info).__name__}')
+        self._staking_info = staking_info
 
     @classmethod
     def from_tx(cls, tx: Transaction):
