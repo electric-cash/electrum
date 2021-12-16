@@ -60,7 +60,7 @@ def get_sum_available_rewards(wallet: Abstract_Wallet):
 
 
 def get_sum_predicted_rewards(wallet: Abstract_Wallet):
-
+    blocks_in_year = 52560  # 365 * 24 * 60 / 10
     transactions = wallet.db.transactions
     staking_info = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
     period_info = staking_info['interestInfo']
@@ -69,7 +69,7 @@ def get_sum_predicted_rewards(wallet: Abstract_Wallet):
     for t in transactions:
         tx = transactions[t]
         if tx.tx_type == TxType.STAKING_DEPOSIT and not tx.staking_info.fulfilled and not tx.staking_info.paid_out:
-            max_reward = tx.staking_info.staking_amount * (period_info[str(tx.staking_info.staking_period)] * tx.staking_info.staking_period / 51840)
+            max_reward = tx.staking_info.staking_amount * (period_info[str(tx.staking_info.staking_period)] * tx.staking_info.staking_period / blocks_in_year)
             completed_period = (current_height - tx.staking_info.deposit_height) / tx.staking_info.staking_period
             max_current_reward = max_reward * completed_period
             pr += max_reward * max_current_reward / tx.staking_info.accumulated_reward
