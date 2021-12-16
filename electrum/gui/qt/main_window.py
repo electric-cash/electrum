@@ -3086,7 +3086,11 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.fiat_send_e.setVisible(b)
         self.fiat_receive_e.setVisible(b)
         self.history_list.update()
+<<<<<<< HEAD
         self.staking_list.update()
+=======
+        # self.staking_list_2.update()
+>>>>>>> remove old staking list and add new
         self.address_list.refresh_headers()
         self.address_list.update()
         self.update_status()
