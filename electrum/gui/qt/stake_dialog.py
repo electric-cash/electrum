@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import (
 from electrum.i18n import _
 from .create_new_stake_window import CreateNewStakingWindow
 from .staking_detail_tx_window import CompletedMultiClaimedStakeDialog
+from .staking_list_2 import StakingModel, StakingList
 from .terms_and_conditions_mixin import load_terms_and_conditions
 from .util import read_QIcon, WindowModalDialog, OkButton
 from ...stake import stake_api
@@ -133,8 +134,6 @@ def staking_dialog(window):
     window.top_h_label.addItem(verticalSpacer)
     window.top_h_label.addWidget(window.stake_balance_label)
 
-    window.staking_list = staking_list
-
     font = QFont()
     font.setUnderline(True)
     window.terms_button = QPushButton()
@@ -146,13 +145,20 @@ def staking_dialog(window):
     window.terms_button.setAutoDefault(True)
     window.terms_button.clicked.connect(terms_and_conditions_view)
 
-
     w = QWidget()
     vbox = QVBoxLayout(w)
 
     vbox.addStretch(1)
     vbox.addLayout(window.top_h_label)
+
+    window.staking_model = StakingModel(window)
+    window.staking_list = l = StakingList(window, window.staking_model)
+    l.searchable_list = l
+    toolbar = l.create_toolbar(window.config)
+    toolbar_shown = bool(window.config.get('show_toolbar_staking', False))
+    l.show_toolbar(toolbar_shown)
     vbox.addWidget(window.staking_list)
+
     vbox.addWidget(window.terms_button)
     vbox.setStretchFactor(window.staking_list, 1000)
 
