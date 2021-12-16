@@ -39,6 +39,7 @@ available_predicted_rewards_list = AvailablePredictedRewardsList(
 available_predicted_rewards_controller = CustomTableWidgetController(table_widget=available_predicted_rewards_list)
 
 
+#####
 class GovernancePowerList(CustomTableWidget):
     pass
 
