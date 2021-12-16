@@ -161,7 +161,7 @@ class TotalPredictedStakingRewardSection(Section):
             ),
             table=available_predicted_rewards_list
         )
-        refresh_predicted_rewards_window(wallet=self._wallet, data=self.predicted_rewards)
+        refresh_predicted_rewards_window(wallet=self._wallet)
         predicted_staking_popup.open()
 
 
