@@ -875,7 +875,6 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             tx_item['txtype'] = tx.tx_type.name
             if self.network:
                 if tx.tx_type == TxType.STAKING_DEPOSIT:
-                    tx.update_staking_info(self.network)
                     tx_item['staking_info'] = tx.staking_info
             transactions_tmp[txid] = tx_item
             # add lnworker info here
