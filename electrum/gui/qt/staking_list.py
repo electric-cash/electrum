@@ -323,7 +323,6 @@ class StakingNode(CustomNode):
         elif col == StakingColumns.TXTYPE:
             return QVariant(tx_item['txtype'])
         elif col == StakingColumns.STATUS and hasattr(staking_info, 'fulfilled'):
-
             if not staking_info.fulfilled and not staking_info.paid_out:
                 return QVariant('Staked')
             if staking_info.fulfilled and staking_info.paid_out:
