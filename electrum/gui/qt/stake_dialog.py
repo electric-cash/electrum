@@ -109,7 +109,7 @@ class CustomButton(QPushButton):
             self.func()
 
 
-def staking_dialog(window):
+def staking_tab(window):
     window.top_h_label = QHBoxLayout()
     window.create_stake_dialog = CreateNewStakingWindow(window)
 
@@ -145,18 +145,12 @@ def staking_dialog(window):
     window.terms_button.setAutoDefault(True)
     window.terms_button.clicked.connect(terms_and_conditions_view)
 
-    w = QWidget()
-    vbox = QVBoxLayout(w)
+    widget = QWidget()
+    vbox = QVBoxLayout(widget)
 
     vbox.addStretch(1)
     vbox.addLayout(window.top_h_label)
 
-    window.staking_model = StakingModel(window)
-    window.staking_list = l = StakingList(window, window.staking_model)
-    l.searchable_list = l
-    toolbar = l.create_toolbar(window.config)
-    toolbar_shown = bool(window.config.get('show_toolbar_staking', False))
-    l.show_toolbar(toolbar_shown)
     vbox.addWidget(window.staking_list)
 
     vbox.addWidget(window.terms_button)
@@ -164,7 +158,7 @@ def staking_dialog(window):
 
     refresh_stake_dialog_window(window=window)
 
-    return w
+    return widget
 
 
 def terms_and_conditions_view():

@@ -237,7 +237,7 @@ class StakingModel(CustomModel, Logger):
             StakingColumns.STAKING_PERIOD: _('Period'),
             StakingColumns.BLOCKS_LEFT: _('Blocks left'),
             StakingColumns.STATUS: _('Type'),
-            StakingColumns.TXTYPE: _('Tx Type'),
+            StakingColumns.TXTYPE: _('Tx Type')
         }[section]
 
     @staticmethod
@@ -320,11 +320,25 @@ class StakingNode(CustomNode):
         elif col == StakingColumns.AMOUNT and hasattr(staking_info, 'staking_amount'):
             staking_amount = staking_info.staking_amount
             return QVariant(staking_amount)
-
-        elif col == StakingColumns.STATUS:
-            return QVariant('Coming soon...')
         elif col == StakingColumns.TXTYPE:
             return QVariant(tx_item['txtype'])
+        elif col == StakingColumns.STATUS:
+
+            if not staking_info.fulfilled and not staking_info.paid_out:
+                return QVariant('Staked')
+            if staking_info.fulfilled and staking_info.paid_out:
+                return QVariant('Unstaked')
+            elif staking_info.fulfilled:
+                return QVariant('Completed')
+
+        elif col == StakingColumns.BLOCKS_LEFT:
+            current_height = window.wallet.get_local_height()
+            blocks_left = (staking_info.deposit_height + staking_info.staking_period) - current_height
+            if blocks_left > 0:
+                return QVariant(blocks_left)
+            else:
+                return QVariant(0)
+
         return QVariant()
 
 
@@ -369,6 +383,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
         for col in StakingColumns:
             sm = QHeaderView.Stretch if col == self.stretch_column else QHeaderView.ResizeToContents
             self.header().setSectionResizeMode(col, sm)
+        self.setColumnHidden(StakingColumns.TXTYPE, True)
 
     def update(self, reason='StakingList.update()'):
         if self.maybe_defer_update():
