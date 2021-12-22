@@ -41,35 +41,8 @@ from PyQt5.QtWidgets import (
 from electrum.i18n import _
 from .create_new_stake_window import CreateNewStakingWindow
 from .staking_detail_tx_window import CompletedMultiClaimedStakeDialog
-from .staking_list_2 import StakingModel, StakingList
 from .terms_and_conditions_mixin import load_terms_and_conditions
 from .util import read_QIcon, WindowModalDialog, OkButton
-from ...stake import stake_api
-from .staking_list import staking_list
-
-
-def refresh_stake_dialog_window(window):
-    """
-    Call this function to refresh stake dialog window
-    TODO
-    """
-    current_staking_data = stake_api.get_detailed_stakes_data_for_addresses(
-        addresses=window.wallet.get_addresses()
-    )
-    current_height = window.wallet.get_local_height()
-
-    staking_list.insert_data(
-        table_data={
-            'Type': [get_verbal_type_name(stack_data=data) for data in current_staking_data],
-            'Start Date': [data['timestamp'] for data in current_staking_data],
-            'Amount': [data['staking_amount'] for data in current_staking_data],
-            'Staking Period': [data['staking_period'] for data in current_staking_data],
-            'Deposit Height': [data['deposit_height'] for data in current_staking_data],
-            'Blocks Left': [get_block_left(data, current_height) for data in current_staking_data],
-            'tx_hash': [data['tx_hash'] for data in current_staking_data],
-        },
-        context_menu_kwargs={'window': window, },
-    )
 
 
 def get_verbal_type_name(stack_data):
@@ -155,8 +128,6 @@ def staking_tab(window):
 
     vbox.addWidget(window.terms_button)
     vbox.setStretchFactor(window.staking_list, 1000)
-
-    refresh_stake_dialog_window(window=window)
 
     return widget
 

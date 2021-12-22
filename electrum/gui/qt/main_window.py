@@ -49,7 +49,7 @@ import electrum
 from electrum import (keystore, ecc, constants, util, bitcoin, commands,
                       paymentrequest, lnutil)
 from electrum.bitcoin import COIN, is_address
-from electrum.gui.qt.staking_list_2 import StakingModel, StakingList
+from electrum.gui.qt.staking_list import StakingModel, StakingList
 from electrum.plugin import run_hook, BasePlugin
 from electrum.i18n import _
 from electrum.util import (format_time,
@@ -224,7 +224,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         tabs.addTab(self.receive_tab, read_QIcon("tab_receive.png"), _('Receive'))
         tabs.addTab(self.staking_tab, read_QIcon("tab_receive.png"), _('Staking'))
         tabs.addTab(self.rewards_tab, read_QIcon("tab_history.png"), _('Rewards'))
-        # tabs.addTab(self.create_staking_tab2(), read_QIcon("tab_receive.png"), _('Staking2'))
 
         def add_optional_tab(tabs, tab, icon, description, name):
             tab.tab_icon = icon
@@ -2030,15 +2029,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.staking_tab = staking_tab(self)
 
         return self.create_list_tab(self.staking_tab)
-
-    # def create_staking_tab2(self):
-    #     self.staking_model = StakingModel(self)
-    #     self.staking_list_2 = l = StakingList(self, self.staking_model)
-    #     l.searchable_list = l
-    #     toolbar = l.create_toolbar(self.config)
-    #     toolbar_shown = bool(self.config.get('show_toolbar_staking', False))
-    #     l.show_toolbar(toolbar_shown)
-    #     return self.create_list_tab(l, toolbar)
 
     def create_rewards_tab(self):
         from electrum.gui.qt.rewards_tab import RewardsWindow
