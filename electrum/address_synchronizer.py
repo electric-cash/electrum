@@ -449,7 +449,7 @@ class AddressSynchronizer(Logger):
                     continue
                 tx = self.db.get_transaction(tx_hash)
                 if tx is not None:
-                    self.add_transaction(type_aware_tx, allow_unrelated=True)
+                    self.add_transaction(tx, allow_unrelated=True)
 
     def remove_local_transactions_we_dont_have(self):
         for txid in itertools.chain(self.db.list_txi(), self.db.list_txo()):
