@@ -399,7 +399,7 @@ class AddressSynchronizer(Logger):
     def receive_history_callback(self, addr: str, hist, tx_fees: Dict[str, int]):
         with self.lock:
             old_hist = self.get_address_history(addr)
-            new_hist = []
+            old_hist_dict = {tx_hash: (tx_hash, height, txtype, staking_info) for tx_hash, height, txtype, staking_info in old_hist}
             for tx_hash, height, txtype, staking_info in old_hist:
                 if (tx_hash, height) not in hist:
                     # make tx local
@@ -407,13 +407,12 @@ class AddressSynchronizer(Logger):
                     self.db.remove_verified_tx(tx_hash)
                     if self.verifier:
                         self.verifier.remove_spv_proof_for_tx(tx_hash)
-                else:
-                    new_hist.append((tx_hash, height, txtype, staking_info))
-            self.db.set_addr_history(addr, new_hist)
+            self.db.set_addr_history(addr, hist)
 
-        for tx_hash, tx_height, txtype, staking_info in new_hist:
+        for tx_hash, tx_height in hist:
             # add it in case it was previously unconfirmed
-            self.add_unverified_tx(tx_hash, tx_height, txtype.name)
+            txtype_temp = old_hist_dict[tx_hash][2].name if tx_hash in old_hist_dict else TxType.NONE.name
+            self.add_unverified_tx(tx_hash, tx_height, txtype_temp)
             # if addr is new, we have to recompute txi and txo
             tx = self.db.get_transaction(tx_hash)
             if tx is None:
