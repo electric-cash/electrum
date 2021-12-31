@@ -35,7 +35,6 @@ def get_all_stake_amount(wallet: Abstract_Wallet):
                 and transactions[t].staking_info.fulfilled
                 and not transactions[t].staking_info.paid_out
         ):
-            amount += transactions[t].staking_info.accumulated_reward
             amount += transactions[t].staking_info.staking_amount
 
     return amount
