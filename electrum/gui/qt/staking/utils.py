@@ -104,3 +104,17 @@ def get_sum_predicted_rewards(wallet: Abstract_Wallet):
             max_current_reward = max_reward * completed_period
             pr += max_reward * max_current_reward / tx.staking_info.accumulated_reward
     return pr
+
+
+def get_predicted_reward(wallet: Abstract_Wallet, tx):
+    blocks_in_year = 52560  # 365 * 24 * 60 / 10
+    staking_info = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
+    period_info = staking_info['interestInfo']
+    current_height = wallet.network.get_server_height()
+    pr = 0
+
+    max_reward = tx['staking_info'].staking_amount * (Decimal(str(period_info[str(tx['staking_info'].staking_period)])) * tx['staking_info'].staking_period / blocks_in_year)
+    completed_period = Decimal(str(current_height - tx['staking_info'].deposit_height)) / Decimal(str(tx['staking_info'].staking_period))
+    max_current_reward = max_reward * completed_period
+    pr += max_reward * max_current_reward / tx['staking_info'].accumulated_reward
+    return pr

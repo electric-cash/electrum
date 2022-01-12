@@ -559,8 +559,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
 
     def show_transaction(self, tx_item, tx):
         from .staking_detail_tx_window import StakedDialog, CompletedReadyToClaimStakeDialog, \
-            CompletedMultiClaimedStakeDialog, CompletedSingleClaimedStakeDialog, \
-            UnstakedMultiStakeDialog, UnstakedSingleStakeDialog
+            CompletedSingleClaimedStakeDialog, UnstakedSingleStakeDialog
         staking_info = tx_item['staking_info']
 
         if not staking_info.fulfilled and not staking_info.paid_out:
@@ -569,14 +568,10 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
 
         elif not staking_info.fulfilled and staking_info.paid_out:
             a = UnstakedSingleStakeDialog(self, tx, tx_item)
-            # a = UnstakedMultiStakeDialog(self, tx, tx_item)
             a.show()
 
         elif staking_info.fulfilled and staking_info.paid_out:
-            # if many
             a = CompletedSingleClaimedStakeDialog(self, tx, tx_item)
-            # else:
-            # a = CompletedMultiClaimedStakeDialog(self, tx, tx_item)
             a.show()
 
         elif staking_info.fulfilled and not staking_info.paid_out:

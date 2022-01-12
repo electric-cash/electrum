@@ -23,6 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import datetime
+import decimal
 from decimal import Decimal
 from typing import Callable, Optional, List
 
@@ -35,6 +36,7 @@ from qrcode import exceptions
 
 from electrum import bitcoin
 from electrum.bitcoin import COIN
+from electrum.gui.qt.staking.utils import get_predicted_reward
 from electrum.i18n import _
 from electrum.transaction import Transaction, PartialTxOutput
 from electrum.gui.qt.create_new_stake_window import CreateNewStakingWindow, CreateNewStakingFinish
@@ -57,11 +59,11 @@ def refresh_stake_dialog_window(data):
 
     tx_list.insert_data(
         table_data={
-            'Tx ID': ['aaaaaaa'],
-            'Staked Amount': '2',
-            'Payout': '2',
-            'GP': '1',
-            'Daily Tx Limit': '1',
+            'Tx ID': [data.detail_tx['txid'], ],
+            'Staked Amount': [str(data.data.staking_info.staking_amount), ],
+            'Payout': [str(data.data.staking_info.accumulated_reward), ],
+            'GP': ['?'],
+            'Daily Tx Limit': ['?'],
         },
     )
 
@@ -148,7 +150,7 @@ class BaseStakingTxDialog(QDialog, MessageBoxMixin):
         url = QUrl("https://explorer.electriccash.global/")
         QDesktopServices.openUrl(url)
 
-# trwajacy stake
+
 class StakedDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -172,21 +174,27 @@ class StakedDialog(BaseStakingTxDialog):
 
         hbox_period = QHBoxLayout()
         period_lab = QLabel('Staking period:')
-        period_lab_data = QLabel('90 Days')
+        period = int(self.data.staking_info.staking_period / 144)
+        period_lab_data = QLabel(f"{period} Days")
         hbox_period.addWidget(period_lab)
         hbox_period.addWidget(period_lab_data)
         vbox_left.addLayout(hbox_period)
 
         hbox_start_date = QHBoxLayout()
         start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel('2021 - 12 -12 ')
+        start_date_lab_data = QLabel(self.detail_tx['date'].strftime("%Y-%m-%d"))
         hbox_start_date.addWidget(start_date_lab)
         hbox_start_date.addWidget(start_date_lab_data)
         vbox_left.addLayout(hbox_start_date)
 
         hbox_blocks = QHBoxLayout()
         blocks_lab = QLabel('Blocks:')
-        blocks_lab_data = QLabel('99 / 12960')
+        finish_height = self.data.staking_info.deposit_height + self.data.staking_info.staking_period
+        current_height = self.wallet.network.get_server_height()
+        blocks_lab_data = QLabel(
+            f" {self.data.staking_info.staking_period - (finish_height-current_height)} / "
+            f"{self.data.staking_info.staking_period}"
+        )
         hbox_blocks.addWidget(blocks_lab)
         hbox_blocks.addWidget(blocks_lab_data)
         vbox_left.addLayout(hbox_blocks)
@@ -212,14 +220,14 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_gp = QHBoxLayout()
         gp_lab = QLabel(_("Governance Power:"))
         hbox_gp.addWidget(gp_lab)
-        gp_lab_data = QLabel(_("123 GP"))
+        gp_lab_data = QLabel(_("??? GP"))
         hbox_gp.addWidget(gp_lab_data)
         vbox_right.addLayout(hbox_gp)
 
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Daily free transaction limit:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("200000 bytes"))
+        p_lab_data = QLabel(_("??? bytes"))
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
@@ -231,7 +239,8 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Estimated payout:"))
         hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_("0.000000003 ELCASH"))
+        ep = get_predicted_reward(self.wallet, self.detail_tx)
+        p_lab_data = QLabel(f"{ep:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
         vbox_right.addStretch(1)
@@ -250,7 +259,6 @@ class StakedDialog(BaseStakingTxDialog):
         self.close_button.setVisible(True)
         self.close_button.clicked.connect(self.on_push_close)
 
-
         # Action buttons (right side)
         self.buttons = [self.unstake_button, self.close_button]
         self.hbox = hbox = QHBoxLayout()
@@ -263,8 +271,10 @@ class StakedDialog(BaseStakingTxDialog):
         password_required = self.wallet.has_keystore_encryption()
         if password_required:
             self.password = None
+
             def got_valid_password(password):
                 self.password = password
+
             unstake_dialog = UnstakeDialog(self, got_valid_password)
             unstake_dialog.finished.connect(self.unstake)
             unstake_dialog.show()
@@ -274,7 +284,7 @@ class StakedDialog(BaseStakingTxDialog):
     def unstake(self):
         tx = self.wallet.make_unsigned_unstake_transaction(self.detail_tx['txid'])
         if not tx:
-            #TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
+            # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
             return
 
         def sign_done(success):
@@ -291,7 +301,6 @@ class StakedDialog(BaseStakingTxDialog):
         self.close()
 
 
-# stake gotowy do zebrania
 class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -318,21 +327,23 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
 
         hbox_period = QHBoxLayout()
         period_lab = QLabel('Staking period:')
-        period_lab_data = QLabel(f"{self.data.staking_info.staking_period/144} Days")
+        period = int(self.data.staking_info.staking_period / 144)
+        period_lab_data = QLabel(f"{period} Days")
         hbox_period.addWidget(period_lab)
         hbox_period.addWidget(period_lab_data)
         vbox_left.addLayout(hbox_period)
 
         hbox_start_date = QHBoxLayout()
         start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel(self.detail_tx['date'].strftime("%m/%d/%Y"))
+        start_date_lab_data = QLabel(self.detail_tx['date'].strftime("%Y-%m-%d"))
         hbox_start_date.addWidget(start_date_lab)
         hbox_start_date.addWidget(start_date_lab_data)
         vbox_left.addLayout(hbox_start_date)
         hbox_end_date = QHBoxLayout()
         end_date_lab = QLabel('End date:')
         finish_height = self.data.staking_info.deposit_height + self.data.staking_info.staking_period
-        block_header = self.wallet.network.run_from_another_thread(self.wallet.network.get_block_header(finish_height, 'catchup'))
+        block_header = self.wallet.network.run_from_another_thread(
+            self.wallet.network.get_block_header(finish_height, 'catchup'))
         end_date = datetime.datetime.fromtimestamp(block_header['timestamp']).strftime("%Y-%m-%d")
         end_date_lab_data = QLabel(end_date)
         hbox_end_date.addWidget(end_date_lab)
@@ -379,7 +390,8 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout:"))
         hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_(f"{self.data.staking_info.accumulated_reward+self.data.staking_info.staking_amount} ELCASH"))
+        p_lab_data = QLabel(
+            _(f"{self.data.staking_info.accumulated_reward + self.data.staking_info.staking_amount} ELCASH"))
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
 
@@ -410,7 +422,6 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.on_push_close)
 
-
         self.buttons = [self.claim_reword_button, self.close_button]
 
         for b in self.buttons:
@@ -426,14 +437,15 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         password_required = self.wallet.has_keystore_encryption()
         if password_required:
             self.password = None
+
             def got_valid_password(password):
                 self.password = password
+
             unstake_dialog = ClaimReward(self, got_valid_password)
             unstake_dialog.finished.connect(self.claim_reward)
             unstake_dialog.show()
         else:
             self.claim_reward()
-
 
     def on_push_close(self):
         self.close()
@@ -441,7 +453,7 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
     def claim_reward(self):
         tx = self.wallet.make_unsigned_claim_stake_transaction([self.detail_tx['txid']])
         if not tx:
-            #TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
+            # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
             return
 
         def sign_done(success):
@@ -454,7 +466,7 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         finish_dialog.finished.connect(self.on_push_close)
         finish_dialog.show()
 
-# zebrany multi stake
+
 class CompletedMultiClaimedStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -548,7 +560,6 @@ class CompletedMultiClaimedStakeDialog(BaseStakingTxDialog):
         self.vbox.addLayout(hbox)
 
 
-# zebrany single stake
 class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -568,28 +579,32 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
 
         hbox_status = QHBoxLayout()
         status_lab = QLabel('Status:')
-        status_lab_data = QLabel('Stake')
+        status_lab_data = QLabel('Claimed')
         hbox_status.addWidget(status_lab)
         hbox_status.addWidget(status_lab_data)
         vbox_left.addLayout(hbox_status)
 
         hbox_start_date = QHBoxLayout()
         start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel('2021-01-01')
+        start_date_lab_data = QLabel(self.detail_tx['date'].strftime("%Y-%m-%d"))
         hbox_start_date.addWidget(start_date_lab)
         hbox_start_date.addWidget(start_date_lab_data)
         vbox_left.addLayout(hbox_start_date)
 
-        hbox_start_date = QHBoxLayout()
-        start_date_lab = QLabel('End date:')
-        start_date_lab_data = QLabel('2021-10-01')
-        hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
-        vbox_left.addLayout(hbox_start_date)
+        hbox_end_date = QHBoxLayout()
+        end_date_lab = QLabel('End date:')
+        finish_height = self.data.staking_info.deposit_height + self.data.staking_info.staking_period
+        block_header = self.wallet.network.run_from_another_thread(
+            self.wallet.network.get_block_header(finish_height, 'catchup'))
+        end_date = datetime.datetime.fromtimestamp(block_header['timestamp']).strftime("%Y-%m-%d")
+        end_date_lab_data = QLabel(end_date)
+        hbox_end_date.addWidget(end_date_lab)
+        hbox_end_date.addWidget(end_date_lab_data)
+        vbox_left.addLayout(hbox_end_date)
 
         hbox_blocks = QHBoxLayout()
         blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('15:11')
+        blocks_lab_data = QLabel('???')
         hbox_blocks.addWidget(blocks_lab)
         hbox_blocks.addWidget(blocks_lab_data)
         vbox_left.addLayout(hbox_blocks)
@@ -610,14 +625,15 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout") + ':')
         hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_("0.000000003 ELCASH"))
+
+        p_lab_data = QLabel(f"{self.data.staking_info.accumulated_reward} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
 
         hbox_fee = QHBoxLayout()
-        p_lab = QLabel(_("Number od tx:"))
+        p_lab = QLabel(_("Number of tx:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("3"))
+        p_lab_data = QLabel(_("1"))
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
@@ -628,7 +644,7 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
 
         vbox.addStretch(1)
         vbox.addWidget(self.tx_table)
-        refresh_stake_dialog_window(data=[])
+        refresh_stake_dialog_window(data=self)
 
     def add_buttons(self):
         self.close_button = QPushButton(_("Close"))
@@ -650,7 +666,6 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         self.restake_window.show()
 
 
-# zerwany multi stake
 class UnstakedMultiStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -705,13 +720,13 @@ class UnstakedMultiStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout") + ':')
         hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_("0.000000003 ELCASH"))
+        p_lab_data = QLabel(f"{self.data.staking_info.staking_amount*0.97} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
 
         hbox_blocks = QHBoxLayout()
         blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('15:11')
+        blocks_lab_data = QLabel('??:??')
         hbox_blocks.addWidget(blocks_lab)
         hbox_blocks.addWidget(blocks_lab_data)
         vbox_right.addLayout(hbox_blocks)
@@ -719,14 +734,14 @@ class UnstakedMultiStakeDialog(BaseStakingTxDialog):
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Number od tx:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("-3"))
+        p_lab_data = QLabel(_("1"))
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Penalty:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("-3.001 ELCASH"))
+        p_lab_data = QLabel(self.data.staking_info.staking_amount*(-0.03))
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
@@ -751,7 +766,6 @@ class UnstakedMultiStakeDialog(BaseStakingTxDialog):
         self.vbox.addLayout(hbox)
 
 
-# zerwany single stake
 class UnstakedSingleStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -771,23 +785,23 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
 
         hbox_status = QHBoxLayout()
         status_lab = QLabel('Status:')
-        status_lab_data = QLabel('Stake')
+        status_lab_data = QLabel('Unstaked')
         hbox_status.addWidget(status_lab)
         hbox_status.addWidget(status_lab_data)
         vbox_left.addLayout(hbox_status)
 
         hbox_start_date = QHBoxLayout()
         start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel('2021-01-01')
+        start_date_lab_data = QLabel(self.detail_tx['date'].strftime("%Y-%m-%d"))
         hbox_start_date.addWidget(start_date_lab)
         hbox_start_date.addWidget(start_date_lab_data)
         vbox_left.addLayout(hbox_start_date)
 
         hbox_start_date = QHBoxLayout()
         start_date_lab = QLabel('End date:')
-        start_date_lab_data = QLabel('2021-10-01')
+        end_date_label = QLabel("????-??-??")
         hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
+        hbox_start_date.addWidget(end_date_label)
         vbox_left.addLayout(hbox_start_date)
 
         vbox_left.addStretch(1)
@@ -806,13 +820,14 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout") + ':')
         hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_("0.000000003 ELCASH"))
+        payout = self.data.staking_info.staking_amount * decimal.Decimal(0.97)
+        p_lab_data = QLabel(f"{payout:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
 
         hbox_blocks = QHBoxLayout()
         blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('15:11')
+        blocks_lab_data = QLabel('??:??')
         hbox_blocks.addWidget(blocks_lab)
         hbox_blocks.addWidget(blocks_lab_data)
         vbox_right.addLayout(hbox_blocks)
@@ -820,14 +835,15 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Number od tx:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("-3"))
+        p_lab_data = QLabel(_("1"))
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Penalty:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("-3.001 ELCASH"))
+        penalty = self.data.staking_info.staking_amount * decimal.Decimal(0.03)
+        p_lab_data = QLabel(f"-{penalty:.8f} ELCASH")
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
@@ -837,7 +853,7 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         vbox.addLayout(hbox_stats)
         vbox.addStretch(1)
         vbox.addWidget(self.tx_table)
-        refresh_stake_dialog_window(data=[])
+        refresh_stake_dialog_window(data=self)
 
     def add_buttons(self):
         self.close_button = QPushButton(_("Close"))
@@ -938,7 +954,6 @@ class UnstakeDialog(WindowModalDialog):
         self.horizontalLayout_2.addWidget(self.label_6)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.main_box.addLayout(self.verticalLayout)
-
 
     def setup_password_label(self):
         self.password_label.setText(_("Password:"))
@@ -1076,4 +1091,3 @@ class ClaimReward(WindowModalDialog):
 
         self.success_callback(password)
         self.close()
-
