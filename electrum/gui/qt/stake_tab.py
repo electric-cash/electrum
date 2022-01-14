@@ -94,11 +94,10 @@ class StakingTabQWidget(QWidget):
         self.parent = parent
         self.password = None
         self.top_h_label = QHBoxLayout()
-        self.create_stake_dialog = CreateNewStakingWindow(self.parent)
 
         self.stake_button = CustomButton(
             text=_('Stake'),
-            trigger=self.create_stake_dialog,
+            trigger=self.create_new_stake_dialog,
             icon=read_QIcon("electrum.png"),
         )
         self.tx_detail_dialog = None
@@ -138,6 +137,10 @@ class StakingTabQWidget(QWidget):
 
         vbox.addWidget(self.terms_button)
         vbox.setStretchFactor(self.parent.staking_list, 1000)
+
+    def create_new_stake_dialog(self):
+        self.stake_dialog = CreateNewStakingWindow(self.parent)
+        self.stake_dialog.open()
 
     def update(self):
         value = get_all_stake_amount(self.parent.wallet)
