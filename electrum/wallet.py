@@ -1467,11 +1467,17 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
     def is_staked_coin(self, utxo: PartialTxInput) -> bool:
         funding_tx = self.db.get_transaction(utxo.prevout.txid.hex())
-        return funding_tx.tx_type == TxType.STAKING_DEPOSIT
+        if funding_tx.tx_type == TxType.STAKING_DEPOSIT:
+            staking_output = funding_tx.outputs()[funding_tx.staking_output_index]
+            index_match = funding_tx.staking_output_index == utxo.prevout.out_idx
+            value_match = staking_output.value == utxo.value_sats()
+            return index_match and value_match
+
+        return False
 
     def can_unstake_coin(self, utxo: PartialTxInput) -> bool:
         funding_tx = self.db.get_transaction(utxo.prevout.txid.hex())
-        if funding_tx.tx_type == TxType.STAKING_DEPOSIT:
+        if self.is_staked_coin(utxo):
             if hasattr(funding_tx, 'staking_info') and funding_tx.staking_info.fulfilled and not funding_tx.staking_info.paid_out:
                 return True
         return False
