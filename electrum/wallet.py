@@ -82,6 +82,7 @@ from .logging import get_logger
 from .lnworker import LNWallet, LNBackups
 from .paymentrequest import PaymentRequest
 from .staking.tx_type import TxType
+from .staking.utils import is_staked_coin as staking_utils_is_staked_coin
 from .util import read_json_file, write_json_file, UserFacingException
 
 from .network import UntrustedServerReturnedError
@@ -1466,14 +1467,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         self.db.put('frozen_coins', list(self.frozen_coins))
 
     def is_staked_coin(self, utxo: PartialTxInput) -> bool:
-        funding_tx = self.db.get_transaction(utxo.prevout.txid.hex())
-        if funding_tx.tx_type == TxType.STAKING_DEPOSIT:
-            staking_output = funding_tx.outputs()[funding_tx.staking_output_index]
-            index_match = funding_tx.staking_output_index == utxo.prevout.out_idx
-            value_match = staking_output.value == utxo.value_sats()
-            return index_match and value_match
-
-        return False
+        return staking_utils_is_staked_coin(utxo, self.db)
 
     def can_unstake_coin(self, utxo: PartialTxInput) -> bool:
         funding_tx = self.db.get_transaction(utxo.prevout.txid.hex())
