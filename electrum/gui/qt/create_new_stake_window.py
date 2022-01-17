@@ -28,9 +28,11 @@ from typing import TYPE_CHECKING
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from electrum.bitcoin import COIN
+from electrum.gui.qt.staking.utils import broadcast_transaction
 from electrum.gui.qt.util import WindowModalDialog, PasswordLineEdit
 from electrum.i18n import _
 from electrum.logging import get_logger
+from electrum.network import TxBroadcastError, BestEffortRequestFailed
 
 _logger = get_logger(__name__)
 
@@ -489,12 +491,15 @@ class CreateNewStakingTwo(WindowModalDialog):
             self.parent.noud_table
         )
         if not tx:
+            _logger.warning('Stakin transaction could not be created')
             # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
             return
 
         tx = self.wallet.sign_transaction(tx, password)
-        self.parent.parent.broadcast_or_show(tx)
+        main_window = self.parent.parent
+        broadcast_transaction(main_window.network, tx)
 
+        # success
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
         finish_dialog.finished.connect(self.close)
         finish_dialog.show()
