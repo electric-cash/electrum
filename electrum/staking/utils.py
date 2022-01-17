@@ -6,6 +6,7 @@ from electrum.bitcoin import opcodes, construct_script, COIN
 if TYPE_CHECKING:
     from electrum.util import TxMinedInfo
     from electrum.wallet_db import WalletDB
+    from electrum.transaction import PartialTxInput
 
 TX_STATUS_INDEX_OFFSET = 9
 TX_TYPES_SPENDABLE = (
@@ -51,7 +52,7 @@ def get_tx_type_aware_tx_status(
     return TX_STATUS_INDEX_OFFSET + tx.tx_type, status_str
 
 
-def is_staked_coin(utxo: 'PartialTxInput', db) -> bool:
+def is_staked_coin(utxo: 'PartialTxInput', db: 'WalletDB') -> bool:
     funding_tx = db.get_transaction(utxo.prevout.txid.hex())
     if funding_tx.tx_type == TxType.STAKING_DEPOSIT:
         staking_output = funding_tx.outputs()[funding_tx.staking_output_index]
@@ -62,7 +63,7 @@ def is_staked_coin(utxo: 'PartialTxInput', db) -> bool:
     return False
 
 
-def filter_spendable_coins(utxos: list, db):
+def filter_spendable_coins(utxos: list['PartialTxInput'], db: WalletDB):
     acceptable_tx_types = TX_TYPES_SPENDABLE
     filtered_utxos = []
     for utxo in utxos:
