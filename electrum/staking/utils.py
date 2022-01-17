@@ -1,3 +1,4 @@
+import typing
 from typing import Tuple, Optional, TYPE_CHECKING
 
 from .tx_type import TxType
@@ -63,7 +64,7 @@ def is_staked_coin(utxo: 'PartialTxInput', db: 'WalletDB') -> bool:
     return False
 
 
-def filter_spendable_coins(utxos: list['PartialTxInput'], db: WalletDB):
+def filter_spendable_coins(utxos: typing.List['PartialTxInput'], db: 'WalletDB'):
     acceptable_tx_types = TX_TYPES_SPENDABLE
     filtered_utxos = []
     for utxo in utxos:
