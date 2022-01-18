@@ -41,7 +41,7 @@ from PyQt5.QtWidgets import (
 from electrum.i18n import _
 from .create_new_stake_window import CreateNewStakingWindow
 from .staking.utils import get_all_stake_amount, get_sum_available_rewards
-from .staking_detail_tx_window import CompletedMultiClaimedStakeDialog, ClaimReward
+from .staking_detail_tx_window import ClaimReward
 from .terms_and_conditions_mixin import load_terms_and_conditions
 from .util import read_QIcon, WindowModalDialog, OkButton
 from ... import bitcoin
