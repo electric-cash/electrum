@@ -467,99 +467,6 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         finish_dialog.show()
 
 
-class CompletedMultiClaimedStakeDialog(BaseStakingTxDialog):
-
-    def __init__(self, parent, data, detail_tx):
-        self.data = data
-        self.detail_tx = detail_tx
-        self.main_window = parent
-        self.tx_table = tx_list
-        super().__init__(parent, data, detail_tx)
-        self.insert_data(self.vbox)
-        self.add_buttons()
-
-    def insert_data(self, vbox):
-        hbox_stats = QHBoxLayout()
-
-        # left column
-        vbox_left = QVBoxLayout()
-
-        hbox_status = QHBoxLayout()
-        status_lab = QLabel('Status:')
-        status_lab_data = QLabel('Stake')
-        hbox_status.addWidget(status_lab)
-        hbox_status.addWidget(status_lab_data)
-        vbox_left.addLayout(hbox_status)
-
-        hbox_start_date = QHBoxLayout()
-        start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel('2021-01-01')
-        hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
-        vbox_left.addLayout(hbox_start_date)
-
-        hbox_start_date = QHBoxLayout()
-        start_date_lab = QLabel('End date:')
-        start_date_lab_data = QLabel('2021-10-01')
-        hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
-        vbox_left.addLayout(hbox_start_date)
-
-        hbox_blocks = QHBoxLayout()
-        blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('15:11')
-        hbox_blocks.addWidget(blocks_lab)
-        hbox_blocks.addWidget(blocks_lab_data)
-        vbox_left.addLayout(hbox_blocks)
-
-        vbox_left.addStretch(1)
-        hbox_stats.addLayout(vbox_left, 50)
-
-        # vertical line separator
-        line_separator = QFrame()
-        line_separator.setFrameShape(QFrame.VLine)
-        line_separator.setFrameShadow(QFrame.Sunken)
-        line_separator.setLineWidth(1)
-        hbox_stats.addWidget(line_separator)
-
-        # right column
-        vbox_right = QVBoxLayout()
-
-        hbox_payout = QHBoxLayout()
-        p_lab = QLabel(_("Payout") + ':')
-        hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(_("0.000000003 ELCASH"))
-        hbox_payout.addWidget(p_lab_data)
-        vbox_right.addLayout(hbox_payout)
-
-        hbox_fee = QHBoxLayout()
-        p_lab = QLabel(_("Number od tx:"))
-        hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("3"))
-        hbox_fee.addWidget(p_lab_data)
-        vbox_right.addLayout(hbox_fee)
-
-        vbox_right.addStretch(1)
-        hbox_stats.addLayout(vbox_right, 50)
-        vbox.addLayout(hbox_stats)
-
-        vbox.addStretch(1)
-        vbox.addWidget(self.tx_table)
-        refresh_stake_dialog_window(data=[])
-
-    def add_buttons(self):
-        self.close_button = QPushButton(_("Close"))
-        self.setVisible(True)
-
-        # Action buttons (right side)
-        self.buttons = [self.close_button]
-        self.hbox = hbox = QHBoxLayout()
-
-        hbox.addStretch(1)
-        hbox.addLayout(Buttons(*self.buttons))
-        self.vbox.addLayout(hbox)
-
-
 class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
@@ -601,13 +508,6 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         hbox_end_date.addWidget(end_date_lab)
         hbox_end_date.addWidget(end_date_lab_data)
         vbox_left.addLayout(hbox_end_date)
-
-        hbox_blocks = QHBoxLayout()
-        blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('???')
-        hbox_blocks.addWidget(blocks_lab)
-        hbox_blocks.addWidget(blocks_lab_data)
-        vbox_left.addLayout(hbox_blocks)
 
         vbox_left.addStretch(1)
         hbox_stats.addLayout(vbox_left, 50)
@@ -664,106 +564,6 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
     def on_push_restake(self):
         self.restake_window = CreateNewStakingWindow(self, default_amount=10, default_period=99)
         self.restake_window.show()
-
-
-class UnstakedMultiStakeDialog(BaseStakingTxDialog):
-
-    def __init__(self, parent, data, detail_tx):
-        self.data = data
-        self.detail_tx = detail_tx
-        self.main_window = parent
-        self.tx_table = tx_list
-        super().__init__(parent, data, detail_tx)
-        self.insert_data(self.vbox)
-        self.add_buttons()
-
-    def insert_data(self, vbox):
-        hbox_stats = QHBoxLayout()
-
-        # left column
-        vbox_left = QVBoxLayout()
-
-        hbox_status = QHBoxLayout()
-        status_lab = QLabel('Status:')
-        status_lab_data = QLabel('Stake')
-        hbox_status.addWidget(status_lab)
-        hbox_status.addWidget(status_lab_data)
-        vbox_left.addLayout(hbox_status)
-
-        hbox_start_date = QHBoxLayout()
-        start_date_lab = QLabel('Start date:')
-        start_date_lab_data = QLabel('2021-01-01')
-        hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
-        vbox_left.addLayout(hbox_start_date)
-
-        hbox_start_date = QHBoxLayout()
-        start_date_lab = QLabel('End date:')
-        start_date_lab_data = QLabel('2021-10-01')
-        hbox_start_date.addWidget(start_date_lab)
-        hbox_start_date.addWidget(start_date_lab_data)
-        vbox_left.addLayout(hbox_start_date)
-
-        vbox_left.addStretch(1)
-        hbox_stats.addLayout(vbox_left, 50)
-
-        # vertical line separator
-        line_separator = QFrame()
-        line_separator.setFrameShape(QFrame.VLine)
-        line_separator.setFrameShadow(QFrame.Sunken)
-        line_separator.setLineWidth(1)
-        hbox_stats.addWidget(line_separator)
-
-        # right column
-        vbox_right = QVBoxLayout()
-
-        hbox_payout = QHBoxLayout()
-        p_lab = QLabel(_("Payout") + ':')
-        hbox_payout.addWidget(p_lab)
-        p_lab_data = QLabel(f"{self.data.staking_info.staking_amount*0.97} ELCASH")
-        hbox_payout.addWidget(p_lab_data)
-        vbox_right.addLayout(hbox_payout)
-
-        hbox_blocks = QHBoxLayout()
-        blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('??:??')
-        hbox_blocks.addWidget(blocks_lab)
-        hbox_blocks.addWidget(blocks_lab_data)
-        vbox_right.addLayout(hbox_blocks)
-
-        hbox_fee = QHBoxLayout()
-        p_lab = QLabel(_("Number od tx:"))
-        hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(_("1"))
-        hbox_fee.addWidget(p_lab_data)
-        vbox_right.addLayout(hbox_fee)
-
-        hbox_fee = QHBoxLayout()
-        p_lab = QLabel(_("Penalty:"))
-        hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(self.data.staking_info.staking_amount*(-0.03))
-        hbox_fee.addWidget(p_lab_data)
-        vbox_right.addLayout(hbox_fee)
-
-        vbox_right.addStretch(1)
-        hbox_stats.addLayout(vbox_right, 50)
-
-        vbox.addLayout(hbox_stats)
-        vbox.addStretch(1)
-        vbox.addWidget(self.tx_table)
-        refresh_stake_dialog_window(data=[])
-
-    def add_buttons(self):
-        self.close_button = QPushButton(_("Close"))
-        self.close_button.setVisible(True)
-
-        # Action buttons (right side)
-        self.buttons = [self.close_button]
-        self.hbox = hbox = QHBoxLayout()
-
-        hbox.addStretch(1)
-        hbox.addLayout(Buttons(*self.buttons))
-        self.vbox.addLayout(hbox)
 
 
 class UnstakedSingleStakeDialog(BaseStakingTxDialog):
@@ -824,13 +624,6 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         p_lab_data = QLabel(f"{payout:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
-
-        hbox_blocks = QHBoxLayout()
-        blocks_lab = QLabel('Block time:')
-        blocks_lab_data = QLabel('??:??')
-        hbox_blocks.addWidget(blocks_lab)
-        hbox_blocks.addWidget(blocks_lab_data)
-        vbox_right.addLayout(hbox_blocks)
 
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Number od tx:"))
