@@ -367,6 +367,10 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
 
     def __init__(self, parent, model: StakingModel):
         super().__init__(parent, self.create_menu, stretch_column=StakingColumns.STATUS_WITH_DATE)
+        self.completed_ready_to_claim_dialog = None
+        self.completed_stake_dialog = None
+        self.unstaked_dialog = None
+        self.staking_dialog = None
         self.config = parent.config
         self.sm = model
         self.proxy = StakingSortFilterModel(self)
@@ -559,29 +563,24 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
 
     def show_transaction(self, tx_item, tx):
         from .staking_detail_tx_window import StakedDialog, CompletedReadyToClaimStakeDialog, \
-            CompletedMultiClaimedStakeDialog, CompletedSingleClaimedStakeDialog, \
-            UnstakedMultiStakeDialog, UnstakedSingleStakeDialog
+            CompletedSingleClaimedStakeDialog, UnstakedSingleStakeDialog
         staking_info = tx_item['staking_info']
 
         if not staking_info.fulfilled and not staking_info.paid_out:
-            a = StakedDialog(self, tx, tx_item)
-            a.show()
+            self.staking_dialog = StakedDialog(self, tx, tx_item)
+            self.staking_dialog.open()
 
         elif not staking_info.fulfilled and staking_info.paid_out:
-            a = UnstakedSingleStakeDialog(self, tx, tx_item)
-            # a = UnstakedMultiStakeDialog(self, tx, tx_item)
-            a.show()
+            self.unstaked_dialog = UnstakedSingleStakeDialog(self, tx, tx_item)
+            self.unstaked_dialog.open()
 
         elif staking_info.fulfilled and staking_info.paid_out:
-            # if many
-            a = CompletedSingleClaimedStakeDialog(self, tx, tx_item)
-            # else:
-            # a = CompletedMultiClaimedStakeDialog(self, tx, tx_item)
-            a.show()
+            self.completed_stake_dialog = CompletedSingleClaimedStakeDialog(self, tx, tx_item)
+            self.completed_stake_dialog.open()
 
         elif staking_info.fulfilled and not staking_info.paid_out:
-            a = CompletedReadyToClaimStakeDialog(self, tx, tx_item)
-            a.show()
+            self.completed_ready_to_claim_dialog = CompletedReadyToClaimStakeDialog(self, tx, tx_item)
+            self.completed_ready_to_claim_dialog.open()
 
     def add_copy_menu(self, menu, idx):
         cc = menu.addMenu(_("Copy"))
