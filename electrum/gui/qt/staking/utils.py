@@ -1,8 +1,16 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
+from electrum.network import TxBroadcastError, BestEffortRequestFailed
 from electrum.staking.tx_type import TxType
 from electrum.wallet import Abstract_Wallet
+from electrum.logging import get_logger
+
+if TYPE_CHECKING:
+    from electrum import Network, Transaction
+
+_logger = get_logger(__name__)
 
 
 def get_data_for_available_rewards_tab(wallet: Abstract_Wallet):
@@ -105,7 +113,6 @@ def get_sum_predicted_rewards(wallet: Abstract_Wallet):
             pr += max_reward * max_current_reward / tx.staking_info.accumulated_reward
     return pr
 
-
 def get_predicted_reward(wallet: Abstract_Wallet, tx):
     blocks_in_year = 52560  # 365 * 24 * 60 / 10
     staking_info = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
@@ -118,3 +125,12 @@ def get_predicted_reward(wallet: Abstract_Wallet, tx):
     max_current_reward = max_reward * completed_period
     pr += max_reward * max_current_reward / tx['staking_info'].accumulated_reward
     return pr
+
+def broadcast_transaction(network: 'Network', tx: 'Transaction'):
+    try:
+        network.run_from_another_thread(network.broadcast_transaction(tx))
+    except TxBroadcastError as e:
+        _logger.error(f'Broadcasting transaction to network failed. {e}; txid: {tx.txid()}')
+    except BestEffortRequestFailed as e:
+        _logger.error(f'No network found. {e}; txid: {tx.txid()}')
+

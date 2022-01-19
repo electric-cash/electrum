@@ -457,6 +457,7 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
             await group.spawn(get_donation_address)
             await group.spawn(get_server_peers)
             await group.spawn(get_relay_fee)
+            await group.spawn(get_staking_info)
             await group.spawn(self._request_fee_estimates(interface))
 
     async def _request_fee_estimates(self, interface):
