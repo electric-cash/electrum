@@ -43,13 +43,16 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.value_change()
         self.open()
 
-    def __init__(self, parent, min_amount=5):
+    def __init__(self, parent, main_window, min_amount=5, default_amount=5,):
 
         super().__init__(parent)
+        self.default_amount = default_amount
+        # self.wallet =
         self.noud_table = 0
         self.parent = parent
+        self.main_window = main_window
         self.min_amount = min_amount
-        self.staking_params = self.parent.network.staking_info['interestInfo']
+        self.staking_params = self.parent.wallet.network.staking_info['interestInfo']
         self.stake_value = 0
         self.picked_period_in_blocks = int(list(self.staking_params.keys())[0])
         self.setEnabled(True)
@@ -107,7 +110,7 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.gridLayout.addWidget(self.period_label, 3, 0, 1, 1)
         self.spinBox_amount.setDecimals(8)
         self.spinBox_amount.setRange(self.min_amount, self.get_spendable_coins())
-        self.spinBox_amount.setValue(self.min_amount)
+        self.spinBox_amount.setValue(self.default_amount)
         self.spinBox_amount.valueChanged.connect(self.value_change)  # set default value
 
         self.gridLayout.addWidget(self.spinBox_amount, 0, 1, 1, 4)
@@ -247,7 +250,7 @@ class CreateNewStakingWindow(WindowModalDialog):
 
     def on_push_next_button(self):
         if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
-            self.dialog = dialog = CreateNewStakingTwo(parent=self)
+            self.dialog = dialog = CreateNewStakingTwo(parent=self, main_window=self.parent)
             dialog.show()
             self.hide()
 
@@ -296,10 +299,11 @@ class CreateNewStakingTwo(WindowModalDialog):
     def __call__(self, *args, **kwargs):
         self.show()
 
-    def __init__(self, parent):
+    def __init__(self, parent, main_window):
         super().__init__(parent)
         self.parent = parent
         self.wallet = parent.parent.wallet
+        self.main_window = main_window
         self.password_required = self.wallet.has_keystore_encryption()
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setEnabled(True)
@@ -496,8 +500,7 @@ class CreateNewStakingTwo(WindowModalDialog):
             return
 
         tx = self.wallet.sign_transaction(tx, password)
-        main_window = self.parent.parent
-        broadcast_transaction(main_window.network, tx)
+        broadcast_transaction(self.main_window.network, tx)
 
         # success
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
