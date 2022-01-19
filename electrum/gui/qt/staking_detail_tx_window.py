@@ -635,7 +635,7 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Penalty:"))
         hbox_fee.addWidget(p_lab)
-        penalty = self.data.staking_info.staking_amount * decimal.Decimal(0.03)  # todo: network.staking_info['penalty']??
+        penalty = self.data.staking_info.staking_amount * self.wallet.network.staking_info['penalty']  # todo: network.staking_info['penalty']??
         p_lab_data = QLabel(f"-{penalty:.8f} ELCASH")
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
