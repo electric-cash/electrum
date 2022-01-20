@@ -47,12 +47,11 @@ class CreateNewStakingWindow(WindowModalDialog):
 
         super().__init__(parent)
         self.default_amount = default_amount
-        # self.wallet =
         self.noud_table = 0
         self.parent = parent
         self.main_window = main_window
         self.min_amount = min_amount
-        self.staking_params = self.parent.wallet.network.staking_info['interestInfo']
+        self.staking_params = self.main_window.network.staking_info['interestInfo']
         self.stake_value = 0
         self.picked_period_in_blocks = int(list(self.staking_params.keys())[0])
         self.setEnabled(True)
@@ -250,7 +249,7 @@ class CreateNewStakingWindow(WindowModalDialog):
 
     def on_push_next_button(self):
         if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
-            self.dialog = dialog = CreateNewStakingTwo(parent=self, main_window=self.parent)
+            self.dialog = dialog = CreateNewStakingTwo(parent=self, main_window=self.main_window)
             dialog.show()
             self.hide()
 
@@ -290,7 +289,7 @@ class CreateNewStakingWindow(WindowModalDialog):
         return self.get_spendable_coins() >= (min_coins * COIN)
 
     def get_spendable_coins(self):
-        coins = sum((i.value_sats() for i in self.parent.wallet.get_spendable_coins(None, nonlocal_only=True)))
+        coins = sum((i.value_sats() for i in self.main_window.wallet.get_spendable_coins(None, nonlocal_only=True)))
         return coins
 
 
@@ -302,7 +301,7 @@ class CreateNewStakingTwo(WindowModalDialog):
     def __init__(self, parent, main_window):
         super().__init__(parent)
         self.parent = parent
-        self.wallet = parent.parent.wallet
+        self.wallet = main_window.wallet
         self.main_window = main_window
         self.password_required = self.wallet.has_keystore_encryption()
         self.setWindowModality(QtCore.Qt.WindowModal)

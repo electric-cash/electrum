@@ -473,7 +473,6 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         self.data = data
         self.parent = parent
         self.detail_tx = detail_tx
-        self.main_window = self.parent.parent
         self.tx_table = tx_list
         super().__init__(parent, data, detail_tx)
         self.insert_data(self.vbox)
@@ -563,7 +562,9 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         self.vbox.addLayout(hbox)
 
     def on_push_restake(self):
-        self.restake_window = CreateNewStakingWindow(parent=self, main_window=None, default_amount=None)
+        self.restake_window = CreateNewStakingWindow(
+            parent=self, main_window=self.parent.parent, default_amount=self.data.staking_info.staking_amount
+        )
         self.restake_window.show()
 
 
