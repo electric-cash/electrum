@@ -139,7 +139,7 @@ class StakingTabQWidget(QWidget):
         vbox.setStretchFactor(self.parent.staking_list, 1000)
 
     def create_new_stake_dialog(self):
-        self.stake_dialog = CreateNewStakingWindow(self.parent)
+        self.stake_dialog = CreateNewStakingWindow(self, main_window=self.parent)
         self.stake_dialog.open()
 
     def update(self):

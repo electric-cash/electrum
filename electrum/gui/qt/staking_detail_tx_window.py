@@ -471,8 +471,8 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
 
     def __init__(self, parent, data, detail_tx):
         self.data = data
+        self.parent = parent
         self.detail_tx = detail_tx
-        self.main_window = parent
         self.tx_table = tx_list
         super().__init__(parent, data, detail_tx)
         self.insert_data(self.vbox)
@@ -562,7 +562,9 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         self.vbox.addLayout(hbox)
 
     def on_push_restake(self):
-        self.restake_window = CreateNewStakingWindow(self, default_amount=10, default_period=99)
+        self.restake_window = CreateNewStakingWindow(
+            parent=self, main_window=self.parent.parent, default_amount=self.data.staking_info.staking_amount
+        )
         self.restake_window.show()
 
 
@@ -620,7 +622,7 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout") + ':')
         hbox_payout.addWidget(p_lab)
-        payout = self.data.staking_info.staking_amount * decimal.Decimal(0.97)
+        payout = self.data.staking_info.staking_amount * decimal.Decimal(100-self.wallet.network.staking_info['penalty'])
         p_lab_data = QLabel(f"{payout:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
@@ -635,7 +637,7 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Penalty:"))
         hbox_fee.addWidget(p_lab)
-        penalty = self.data.staking_info.staking_amount * self.wallet.network.staking_info['penalty']  # todo: network.staking_info['penalty']??
+        penalty = self.data.staking_info.staking_amount * decimal.Decimal(self.wallet.network.staking_info['penalty'])
         p_lab_data = QLabel(f"-{penalty:.8f} ELCASH")
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
