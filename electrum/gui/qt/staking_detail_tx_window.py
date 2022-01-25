@@ -291,7 +291,7 @@ class StakedDialog(BaseStakingTxDialog):
         if password_required and self.password is None:
             return
 
-        self.parent().parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
+        # self.parent().parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
 
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
         finish_dialog.finished.connect(self.on_push_close)
