@@ -36,7 +36,7 @@ from qrcode import exceptions
 
 from electrum import bitcoin
 from electrum.bitcoin import COIN
-from electrum.gui.qt.staking.utils import get_predicted_reward
+from electrum.gui.qt.staking.utils import get_predicted_reward, broadcast_transaction
 from electrum.i18n import _
 from electrum.transaction import Transaction, PartialTxOutput
 from electrum.gui.qt.create_new_stake_window import CreateNewStakingWindow, CreateNewStakingFinish
@@ -287,9 +287,9 @@ class StakedDialog(BaseStakingTxDialog):
             # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
             return
 
-        def sign_done(success):
-            if success:
-                self.parent().parent.broadcast_or_show(tx)
+        password_required = self.wallet.has_keystore_encryption()
+        if password_required and self.password is None:
+            return
 
         self.parent().parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
 
@@ -307,7 +307,7 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         super().__init__(parent, data, detail_tx)
         self.data = data
         self.detail_tx = detail_tx
-        self.main_window = parent
+        self.main_window = parent.parent
         self.insert_data(self.vbox)
         self.add_buttons()
         self.password = None
@@ -441,9 +441,9 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
             def got_valid_password(password):
                 self.password = password
 
-            unstake_dialog = ClaimReward(self, got_valid_password)
-            unstake_dialog.finished.connect(self.claim_reward)
-            unstake_dialog.show()
+            claim_dialog = ClaimReward(self.main_window, got_valid_password)
+            claim_dialog.finished.connect(self.claim_reward)
+            claim_dialog.show()
         else:
             self.claim_reward()
 
@@ -456,11 +456,12 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
             # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
             return
 
-        def sign_done(success):
-            if success:
-                self.parent().parent.broadcast_or_show(tx)
+        password_required = self.wallet.has_keystore_encryption()
+        if password_required and self.password is None:
+            return
 
-        self.parent().parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
+        tx = self.wallet.sign_transaction(tx, self.password)
+        broadcast_transaction(self.main_window.network, tx)
 
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
         finish_dialog.finished.connect(self.on_push_close)
@@ -735,7 +736,8 @@ class UnstakeDialog(WindowModalDialog):
         self.label_4.setText(_("Total unstaked amount:"))
         self.horizontalLayout.addWidget(self.label_4)
         self.label_3 = QLabel()
-        self.label_3.setText("2.00000000 ELCASH")
+        amount = 0
+        self.label_3.setText(f"{amount:.8f}")
         self.horizontalLayout.addWidget(self.label_3)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
         self.verticalLayout.addLayout(self.verticalLayout_2)
@@ -801,7 +803,7 @@ class ClaimReward(WindowModalDialog):
     def __init__(self, parent, success_callback):
         super().__init__(parent)
         self.success_callback = success_callback
-        self.parent = parent
+        self.main_window = parent
         self.wallet = parent.wallet
         self.setEnabled(True)
         self.setMinimumSize(QSize(420, 200))
