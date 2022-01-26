@@ -86,9 +86,9 @@ class BaseStakingTxDialog(QDialog, MessageBoxMixin):
         QDialog.__init__(self, parent=parent)
         self.data = data
         self.detail_tx = detail_tx
-        self.main_window = parent
+        self.main_window = parent.parent
         self.config = parent.config
-        self.wallet = parent.wallet
+        self.wallet = parent.parent.wallet
 
         self.setMinimumWidth(1100)
         self.psbt_only_widgets = []  # type: List[QWidget]
@@ -268,18 +268,13 @@ class StakedDialog(BaseStakingTxDialog):
         self.vbox.addLayout(hbox)
 
     def on_push_unstake(self):
-        password_required = self.wallet.has_keystore_encryption()
-        if password_required:
-            self.password = None
 
-            def got_valid_password(password):
-                self.password = password
+        def got_valid_password(password):
+            self.password = password
 
-            unstake_dialog = UnstakeDialog(self, got_valid_password)
-            unstake_dialog.finished.connect(self.unstake)
-            unstake_dialog.show()
-        else:
-            self.unstake()
+        unstake_dialog = UnstakeDialog(self, got_valid_password)
+        unstake_dialog.finished.connect(self.unstake)
+        unstake_dialog.show()
 
     def unstake(self):
         tx = self.wallet.make_unsigned_unstake_transaction(self.detail_tx['txid'])
@@ -291,7 +286,8 @@ class StakedDialog(BaseStakingTxDialog):
         if password_required and self.password is None:
             return
 
-        # self.parent().parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
+        tx = self.wallet.sign_transaction(tx, self.password)
+        broadcast_transaction(self.main_window.network, tx)
 
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
         finish_dialog.finished.connect(self.on_push_close)
@@ -695,7 +691,9 @@ class UnstakeDialog(WindowModalDialog):
         self.password_label = QLabel()
         self.password_lineEdit = PasswordLineEdit()
         self.password_error_label = QLabel()
-        self.setup_password_label()
+        password_required = self.wallet.has_keystore_encryption()
+        if password_required:
+            self.setup_password_label()
 
         self.text_tabel = QLabel()
         self.button_layout = QHBoxLayout()
@@ -736,8 +734,8 @@ class UnstakeDialog(WindowModalDialog):
         self.label_4.setText(_("Total unstaked amount:"))
         self.horizontalLayout.addWidget(self.label_4)
         self.label_3 = QLabel()
-        amount = 0
-        self.label_3.setText(f"{amount:.8f}")
+        amount = self.parent.data.staking_info.staking_amount
+        self.label_3.setText(f"{amount:.8f} ELCASH")
         self.horizontalLayout.addWidget(self.label_3)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
         self.verticalLayout.addLayout(self.verticalLayout_2)
@@ -747,7 +745,8 @@ class UnstakeDialog(WindowModalDialog):
         self.label_5.setText(_("Penality:"))
         self.horizontalLayout_2.addWidget(self.label_5)
         self.label_6 = QLabel()
-        self.label_6.setText("2.00000000 ELCASH")
+        penality = self.parent.data.staking_info.staking_amount * decimal.Decimal(0.03)
+        self.label_6.setText(f"{penality:.8f} ELCASH")
         self.horizontalLayout_2.addWidget(self.label_6)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.main_box.addLayout(self.verticalLayout)
@@ -781,8 +780,10 @@ class UnstakeDialog(WindowModalDialog):
         self.close()
 
     def on_push_send_window(self):
+
+        password_required = self.wallet.has_keystore_encryption()
         password = self.password_lineEdit.text() or None
-        if not password:
+        if not password and password_required:
             return
         try:
             self.wallet.check_password(password)
