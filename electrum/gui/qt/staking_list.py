@@ -559,7 +559,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
             tx = self.wallet.db.get_transaction(tx_hash)
             if not tx:
                 return
-            self.show_transaction(tx_item, tx)
+            self.show_transaction(tx_item=tx_item, tx=tx)
 
     def show_transaction(self, tx_item, tx):
         from .staking_detail_tx_window import StakedDialog, CompletedReadyToClaimStakeDialog, \
@@ -615,13 +615,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
             menu.addAction(_("Remove"), lambda: self.remove_local_tx(tx_hash))
         cc = self.add_copy_menu(menu, idx)
         cc.addAction(_("Transaction ID"), lambda: self.place_text_on_clipboard(tx_hash, title="TXID"))
-        for c in self.editable_columns:
-            if self.isColumnHidden(c):
-                continue
-            label = self.sm.headerData(c, Qt.Horizontal, Qt.DisplayRole)
-            # TODO use siblingAtColumn when min Qt version is >=5.11
-            persistent = QPersistentModelIndex(org_idx.sibling(org_idx.row(), c))
-            menu.addAction(_("Edit {}").format(label), lambda p=persistent: self.edit(QModelIndex(p)))
+
         menu.addAction(_("View Transaction"), lambda: self.show_transaction(tx_item, tx))
         channel_id = tx_item.get('channel_id')
         if channel_id:
