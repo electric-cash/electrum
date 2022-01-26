@@ -156,11 +156,13 @@ class StakingTabQWidget(QWidget):
         password_required = self.parent.wallet.has_keystore_encryption()
         if password_required:
             self.password = None
+
             def got_valid_password(password):
                 self.password = password
-            unstake_dialog = ClaimReward(self, got_valid_password)
-            unstake_dialog.finished.connect(self.claim_rewards_unlocked)
-            unstake_dialog.show()
+
+            claim_dialog = ClaimReward(self.parent, got_valid_password)
+            claim_dialog.finished.connect(self.claim_rewards_unlocked)
+            claim_dialog.show()
         else:
             self.claim_rewards_unlocked()
 
