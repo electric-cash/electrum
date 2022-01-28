@@ -20,8 +20,8 @@ class Section:
         self._root_widget = root_widget
 
         self._section_layout = QVBoxLayout()
-        self._section_layout.setContentsMargins(-1, 120, -1, 15)
-        spacer_item = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self._section_layout.setContentsMargins(-1, 2, -1, 2)
+        spacer_item = QSpacerItem(6, 6, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self._title_label = QLabel(root_widget)
         self._title_label.setAlignment(Qt.AlignCenter)
         title_label_font = QtGui.QFont()
@@ -121,14 +121,6 @@ class AvailableRewardsSection(Section):
 
     def __init__(self, root_widget, wallet):
         super().__init__(root_widget, wallet)
-        self.add_claim_button()
-
-    def add_claim_button(self):
-        self._claim_button = QPushButton()
-        self._claim_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self._button_layout.insertWidget(0, self._claim_button, alignment=Qt.AlignCenter)
-        self._claim_button.setText('Claim Rewards')
-        # self._claim_button.clicked.connect() #todo: connect to claim function
 
     def display_detail_popup(self):
         available_reward_popup = RewardPopup(
@@ -207,12 +199,12 @@ class DailyFreeTransactionLimitSection(Section):
         daily_free_transactions.open()
 
 
-class RewardsWindow(QWidget):
+class RewardsWidget(QWidget):
     def __init__(self, wallet, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._main_layout = QHBoxLayout(self)
         self.wallet = wallet
-        spacer_item = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        spacer_item = QSpacerItem(20, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
         self._main_layout.addItem(spacer_item)
         self._available_section = AvailableRewardsSection(root_widget=self, wallet=self.wallet)
@@ -246,5 +238,5 @@ class RewardsWindow(QWidget):
     def update(self):
         self.set_available_rewards_text(value=get_sum_available_rewards(self.wallet))
         self.set_total_predicted_staking_reward_text(value=get_sum_predicted_rewards(self.wallet))
-        self.set_governance_power_text(value=14200)
-        self.set_daily_free_transaction_limit(value='980/20000')
+        self.set_governance_power_text(value='14200(mock)')
+        self.set_daily_free_transaction_limit(value='980/20000(mock)')

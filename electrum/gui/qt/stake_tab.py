@@ -44,10 +44,6 @@ from .staking.utils import get_all_stake_amount, get_sum_available_rewards
 from .staking_detail_tx_window import ClaimReward
 from .terms_and_conditions_mixin import load_terms_and_conditions
 from .util import read_QIcon, WindowModalDialog, OkButton
-from ... import bitcoin
-from ...bitcoin import COIN
-from ...transaction import PartialTxOutput
-from ...util import bfh
 
 
 def get_verbal_type_name(stack_data):
@@ -93,8 +89,6 @@ class StakingTabQWidget(QWidget):
         super().__init__(*args, **kwargs)
         self.parent = parent
         self.password = None
-        self.top_h_label = QHBoxLayout()
-
         self.stake_button = CustomButton(
             text=_('Stake'),
             trigger=self.create_new_stake_dialog,
@@ -113,29 +107,36 @@ class StakingTabQWidget(QWidget):
 
         verticalSpacer = QSpacerItem(400, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 
+        self.top_h_label = QHBoxLayout()
         self.top_h_label.addLayout(buttons)
         self.top_h_label.addItem(verticalSpacer)
         self.top_h_label.addWidget(self.stake_balance_label)
 
+        self.terms_h_label = QHBoxLayout()
         font = QFont()
-        font.setUnderline(True)
         self.terms_button = QPushButton()
         self.terms_button.setFont(font)
-        self.terms_button.setText(_("Terms & Conditions"))
-        self.terms_button.setMaximumSize(QSize(140, 16777215))
+        self.terms_button.setText(_("Terms and Conditions"))
+        self.terms_button.setMaximumSize(QSize(200, 16777215))
         self.terms_button.setCursor(QCursor(Qt.PointingHandCursor))
         self.terms_button.setStyleSheet("border: none;")
         self.terms_button.setAutoDefault(True)
         self.terms_button.clicked.connect(terms_and_conditions_view)
 
+        self.terms_h_label.addItem(verticalSpacer)
+        self.terms_h_label.addWidget(self.terms_button)
+
+        from .rewards_widget import RewardsWidget
+        self.rewards_widget = RewardsWidget(self.parent.wallet)
+
         vbox = QVBoxLayout(self)
 
         vbox.addStretch(1)
         vbox.addLayout(self.top_h_label)
-
         vbox.addWidget(self.parent.staking_list)
+        vbox.addWidget(self.rewards_widget)
+        vbox.addLayout(self.terms_h_label)
 
-        vbox.addWidget(self.terms_button)
         vbox.setStretchFactor(self.parent.staking_list, 1000)
 
     def create_new_stake_dialog(self):
@@ -143,6 +144,7 @@ class StakingTabQWidget(QWidget):
         self.stake_dialog.open()
 
     def update(self):
+        self.rewards_widget.update()
         value = get_all_stake_amount(self.parent.wallet)
         available_rewards = get_sum_available_rewards(self.parent.wallet)
         if available_rewards > Decimal('0.0'):
