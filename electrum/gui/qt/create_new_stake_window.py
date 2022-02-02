@@ -266,10 +266,13 @@ class CreateNewStakingWindow(WindowModalDialog):
             self.amount_value_error_label.show()
             self.next_button.setEnabled(False)
 
-        blocks_in_year = 144*365
-        percentage_profit = 100 * self.picked_period_in_blocks / blocks_in_year
-        self.reward = self.spinBox_amount.value() * percentage_profit
-        self.estimated_payout = self.spinBox_amount.value() + self.reward
+        blocks_in_year = 144*360
+        staking_settings = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_staking_info()
+        )
+        percent_per_year = staking_settings['interestInfo'][str(self.picked_period_in_blocks)]
+        self.reward = self.spinBox_amount.value() * percent_per_year * self.picked_period_in_blocks / blocks_in_year
+        self.estimated_payout = self.spinBox_amount.value() + self.reward  # todo: fix it!
         self.estimate_label.setText(
             _("Estimated payout: ") + str(f"{self.estimated_payout:0.8f}") + ' ELCASH'
         )
@@ -281,9 +284,6 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.gp_value_label.setText(
             _("Governance Power: ") + str(" ??? ") + ' GP'
         )
-
-    def get_period_in_days(self):
-        return self.period_blocks * 144
 
     def valid_enough_coins(self, min_coins):
         return self.get_spendable_coins() >= (min_coins * COIN)
