@@ -112,20 +112,6 @@ class StakingTabQWidget(QWidget):
         self.top_h_label.addItem(verticalSpacer)
         self.top_h_label.addWidget(self.stake_balance_label)
 
-        self.terms_h_label = QHBoxLayout()
-        font = QFont()
-        self.terms_button = QPushButton()
-        self.terms_button.setFont(font)
-        self.terms_button.setText(_("Terms and Conditions"))
-        self.terms_button.setMaximumSize(QSize(200, 16777215))
-        self.terms_button.setCursor(QCursor(Qt.PointingHandCursor))
-        self.terms_button.setStyleSheet("border: none;")
-        self.terms_button.setAutoDefault(True)
-        self.terms_button.clicked.connect(terms_and_conditions_view)
-
-        self.terms_h_label.addItem(verticalSpacer)
-        self.terms_h_label.addWidget(self.terms_button)
-
         from .rewards_widget import RewardsWidget
         self.rewards_widget = RewardsWidget(self.parent.wallet)
 
@@ -135,7 +121,6 @@ class StakingTabQWidget(QWidget):
         vbox.addLayout(self.top_h_label)
         vbox.addWidget(self.parent.staking_list)
         vbox.addWidget(self.rewards_widget)
-        vbox.addLayout(self.terms_h_label)
 
         vbox.setStretchFactor(self.parent.staking_list, 1000)
 
@@ -177,34 +162,3 @@ class StakingTabQWidget(QWidget):
                 self.parent.broadcast_or_show(tx)
 
         self.parent.sign_tx_with_password(tx, callback=sign_done, password=self.password)
-
-# def staking_tab(self):
-#     widget = QWidget()
-#
-#     return widget
-
-
-def terms_and_conditions_view():
-    terms = load_terms_and_conditions(config={})
-    dialog = WindowModalDialog(None, _('Terms & Conditions'))
-    # size and icon position the same like in install wizard
-    dialog.setMinimumSize(600, 400)
-    main_vbox = QVBoxLayout(dialog)
-    logo_vbox = QVBoxLayout()
-    logo_vbox.addStretch(1)
-    logo_hbox = QHBoxLayout()
-    logo_hbox.addLayout(logo_vbox)
-    logo_hbox.addSpacing(5)
-    vbox = QVBoxLayout()
-    text_browser = QTextBrowser()
-    text_browser.setReadOnly(True)
-    text_browser.setOpenExternalLinks(True)
-    text_browser.setHtml(terms)
-    vbox.addWidget(text_browser)
-    footer = QHBoxLayout()
-    footer.addStretch(1)
-    footer.addWidget(OkButton(dialog))
-    vbox.addLayout(footer)
-    logo_hbox.addLayout(vbox)
-    main_vbox.addLayout(logo_hbox)
-    dialog.exec_()
