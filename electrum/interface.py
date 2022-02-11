@@ -1036,7 +1036,10 @@ class Interface(Logger):
         res = await self.session.send_request('blockchain.staking.get_info')
 
         assert_dict_contains_field(res, field_name='interestInfo')
-        assert_dict_contains_field(res, field_name='num_stakes')
+        assert_dict_contains_field(res, field_name='num_active_stakes')
+        assert_dict_contains_field(res, field_name='num_complete_stakes')
+        assert_dict_contains_field(res, field_name='num_early_withdrawn_stakes')
+        assert_dict_contains_field(res, field_name='num_staking_addresses')
         assert_dict_contains_field(res, field_name='penalty')
         assert_dict_contains_field(res, field_name='staking_pool')
         assert_dict_contains_field(res, field_name='total_staked')
