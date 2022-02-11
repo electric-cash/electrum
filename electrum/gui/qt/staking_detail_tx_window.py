@@ -175,7 +175,7 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_period = QHBoxLayout()
         period_lab = QLabel(_('Staking period:'))
         period = int(self.data.staking_info.staking_period / 144)
-        period_lab_data = QLabel(f"{period} "+ _("Days"))
+        period_lab_data = QLabel(f"{period} " + _("Days"))
         hbox_period.addWidget(period_lab)
         hbox_period.addWidget(period_lab_data)
         vbox_left.addLayout(hbox_period)
