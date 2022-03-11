@@ -312,7 +312,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                 channel_backups[chan_id.hex()] = self.lnworker.create_channel_backup(chan_id)
             new_db.put('channels', None)
             # todo uncomment when turn on lightning
-#            new_db.put('lightning_privkey2', None)
+            # new_db.put('lightning_privkey2', None)
 
         new_path = os.path.join(backup_dir, self.basename() + '.backup')
         new_storage = WalletStorage(new_path)
@@ -570,10 +570,10 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         can_bump = False
         tx_hash = tx.txid()  # note: txid can be None! e.g. when called from GUI tx dialog
         # todo uncomment when turn on lightning
-#        is_lightning_funding_tx = False
-#        if self.has_lightning() and tx_hash is not None:
-#            is_lightning_funding_tx = any([chan.funding_outpoint.txid == tx_hash
-#                                           for chan in self.lnworker.channels.values()])
+        #        is_lightning_funding_tx = False
+        #        if self.has_lightning() and tx_hash is not None:
+        #            is_lightning_funding_tx = any([chan.funding_outpoint.txid == tx_hash
+        #                                           for chan in self.lnworker.channels.values()])
         tx_we_already_have_in_db = self.db.get_transaction(tx_hash)
         can_save_as_local = (is_relevant and tx.txid() is not None
                              and (tx_we_already_have_in_db is None or not tx_we_already_have_in_db.is_complete()))
@@ -1094,7 +1094,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                 fee_per_byte = fee / size
                 extra.append(format_fee_satoshis(fee_per_byte) + ' sat/b')
             if fee is not None and height in (TX_HEIGHT_UNCONF_PARENT, TX_HEIGHT_UNCONFIRMED) \
-               and self.config.has_fee_mempool():
+                    and self.config.has_fee_mempool():
                 exp_n = self.config.fee_to_depth(fee_per_byte)
                 if exp_n is not None:
                     extra.append('%.2f MB'%(exp_n/1000000))
@@ -1826,7 +1826,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                     return True
         return False
 
-    def update_stakes(self, *, ignore_network_issues=False):
+    async def update_stakes(self, current_height, ignore_network_issues=False):
         if self.network and self.network.has_internet_connection():
             try:
                 txs = self.db.list_transactions()
@@ -1841,11 +1841,11 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
                     # filter(lambda tx: tx.tx_type...)
                     if tx.tx_type == TxType.STAKING_DEPOSIT:
                         try:
-                            tx.update_staking_info(self.network)
+                            await tx.update_staking_info(self.network, current_height)
+
                         except UntrustedServerReturnedError as error:
                             self.logger.info(f'detected not confirmed staking tx - ignoring for now...')
                             self.logger.info(error.original_exception)
-
             except NetworkException as e:
                 self.logger.info(f'got network eror: {repr(e)}. '
                                  f'if you are intentionally offline, consider using the --offline flag')
@@ -2387,7 +2387,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         pass
 
     def create_transaction(self, outputs, *, fee=None, feerate=None, change_addr=None, domain_addr=None, domain_coins=None,
-              unsigned=False, rbf=None, password=None, locktime=None):
+                           unsigned=False, rbf=None, password=None, locktime=None):
         if fee is not None and feerate is not None:
             raise Exception("Cannot specify both 'fee' and 'feerate' at the same time!")
         coins = self.get_spendable_coins(domain_addr)
@@ -2684,7 +2684,7 @@ class Deterministic_Wallet(Abstract_Wallet):
         # for a few seconds!
         self.synchronize()
 
-# todo uncomment when turn on lightning
+    # todo uncomment when turn on lightning
 #        # create lightning keys
 #        if self.can_have_lightning():
 #            self.init_lightning()

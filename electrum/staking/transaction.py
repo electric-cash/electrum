@@ -81,20 +81,22 @@ class StakingDepositTx(TypeAwareTransaction):
         self._staking_info = None
         self.staking_period_index = None
         self.staking_output_index = None
+        self._last_update_height = 0
 
     @property
     def is_staking_tx(self) -> bool:
         return True
 
-    def update_staking_info(self, network):
+    async def update_staking_info(self, network, current_height):
+        if self._last_update_height == current_height:
+            return
         # can raise network exception
-        staking_info = network.run_from_another_thread(
-            network.get_stake(self.txid(), timeout=10)
-        )
+        staking_info = await network.get_stake(self.txid(), timeout=10)
         staking_info['accumulated_reward'] = Decimal(f"{staking_info['accumulated_reward']:.8f}")
         staking_info['staking_amount'] = Decimal(f"{staking_info['staking_amount']:.8f}")
 
         self.staking_info = StakingInfo(**staking_info)
+        self._last_update_height = current_height
 
     @property
     def staking_info(self) -> StakingInfo:
