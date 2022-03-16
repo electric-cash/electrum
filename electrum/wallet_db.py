@@ -1116,6 +1116,12 @@ class WalletDB(JsonDB):
         self._addr_to_addr_index[addr] = (0, len(self.receiving_addresses))
         self.receiving_addresses.append(addr)
 
+    @modifier
+    def add_staking_address(self, addr: str) -> None:
+        assert isinstance(addr, str)
+        self._addr_to_addr_index[addr] = (2, len(self.staking_addresses))
+        self.staking_addresses.append(addr)
+
     @locked
     def get_address_index(self, address: str) -> Optional[Sequence[int]]:
         assert isinstance(address, str)
@@ -1156,11 +1162,14 @@ class WalletDB(JsonDB):
                     self.data['addresses'][name] = []
             self.change_addresses = self.data['addresses']['change']
             self.receiving_addresses = self.data['addresses']['receiving']
+            self.staking_addresses = self.data['addresses'].get('staking', [])
             self._addr_to_addr_index = {}  # type: Dict[str, Sequence[int]]  # key: address, value: (is_change, index)
             for i, addr in enumerate(self.receiving_addresses):
                 self._addr_to_addr_index[addr] = (0, i)
             for i, addr in enumerate(self.change_addresses):
                 self._addr_to_addr_index[addr] = (1, i)
+            for i, addr in enumerate(self.staking_addresses):
+                self._addr_to_addr_index[addr] = (2, i)
 
     @profiler
     def _load_transactions(self):

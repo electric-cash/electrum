@@ -23,6 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import random
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -276,9 +277,16 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.estimate_label.setText(
             _("Estimated payout: ") + str(f"{self.estimated_payout:0.8f}") + ' ELCASH'
         )
-
+        # amount = Decimal(self.spinBox_amount.value())
+        free = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_free_tx_limit(amount=self.spinBox_amount.value(),
+                                                              index=int(list(self.staking_params.keys()).index(
+                                                                  str(self.picked_period_in_blocks))
+                                                              ))
+        )
+        # free = '100 '
         self.free_trans_label.setText(
-            _("Daily free transactions limit:") + str(' ??? ') + 'bytes'
+            _("Daily free transactions limit: ") + str(free) + ' bytes'
         )
 
         self.gp_value_label.setText(

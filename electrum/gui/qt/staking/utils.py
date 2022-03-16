@@ -94,7 +94,9 @@ def get_predicted_reward(wallet: Abstract_Wallet, tx):
 
 def get_sum_predicted_rewards(wallet: Abstract_Wallet):
     blocks_in_year = 51840  # 360 * 24 * 6
-    staking_settings = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
+    staking_settings = wallet.network.run_from_another_thread(
+        wallet.network.get_staking_info()
+                                                              )
     transactions = wallet.db.transactions
     pr = 0
 
