@@ -26,7 +26,7 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, Union
 
-from PyQt5.QtWidgets import  QVBoxLayout, QLabel, QGridLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QGridLayout, QPushButton, QLineEdit
 
 from electrum.i18n import _
 from electrum.util import NotEnoughFunds, NoDynamicFeeEstimates
@@ -42,7 +42,6 @@ from .fee_slider import FeeSlider, FeeComboBox
 
 if TYPE_CHECKING:
     from .main_window import ElectrumWindow
-
 
 
 class TxEditor:
@@ -174,6 +173,10 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         BlockingWaitingDialog(window, _("Preparing transaction..."), self.update_tx)
         self.update()
         self.is_send = False
+
+    def send_free_tx(self):
+        if self.is_free:
+            pass
 
     def default_message(self):
         return _('Enter your password to proceed') if self.password_required else _('Click Send to proceed')

@@ -279,11 +279,16 @@ class CreateNewStakingWindow(WindowModalDialog):
         )
         # amount = Decimal(self.spinBox_amount.value())
         free = self.main_window.wallet.network.run_from_another_thread(
-            self.main_window.wallet.network.get_free_tx_limit(amount=self.spinBox_amount.value(),
-                                                              index=int(list(self.staking_params.keys()).index(
-                                                                  str(self.picked_period_in_blocks))
-                                                              ))
+            self.main_window.wallet.network.get_free_tx_limit(
+                amount=self.spinBox_amount.value(),
+                index=int(list(self.staking_params.keys()).index(
+                    str(self.picked_period_in_blocks))
+                )
+            )
         )
+        # a = self.main_window.wallet.network.run_from_another_thread(
+        #     self.main_window.wallet.network.get_free_tx_info(address='telcash1qe4rdzf2uujyrvusd3e24mlnvf0944tczgqmda2')
+        # )
         # free = '100 '
         self.free_trans_label.setText(
             _("Daily free transactions limit: ") + str(free) + ' bytes'

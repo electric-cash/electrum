@@ -1034,7 +1034,7 @@ class Interface(Logger):
         """
         address: address where is any active stake
         """
-        res = await self.session.send_request('blockchain.get_Free_tx_info', [address])
+        res = await self.session.send_request('blockchain.get_free_tx_info', [address])
 
         # assert_dict_contains_field(res, field_name='test')
 

@@ -1305,33 +1305,40 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
     def make_unsigned_stake_deposit(self, amount_satoshi: int, period_index: int):
         min_viable_satoshi = 2137
-        output_scriptpubkey = bfh(bitcoin.address_to_script(self.get_staking_address()))
+        output_scriptpubkey = bfh(bitcoin.address_to_script(self.get_receiving_address()))
         stake_output_main = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=amount_satoshi)
-        stake_output_freetx = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=min_viable_satoshi)
+
+        self.get_staking_address()
+        lu = self.network.run_from_another_thread(
+            self.network.listunspent_for_scripthash(
+                bitcoin.address_to_scripthash(self.get_staking_address())))
+
+        if not any(d['value'] == 2137 for d in lu):
+            stake_output_freetx = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=min_viable_satoshi)
+            is_free_output = True
+        else:
+            is_free_output = False
 
         stake_metadata_output_scriptpubkey = bfh(get_staking_metadata_output_script(period_index, 1))
         stake_metadata_output = PartialTxOutput(scriptpubkey=stake_metadata_output_scriptpubkey, value=0)
 
+        if is_free_output:
+            outputs = [stake_metadata_output, stake_output_main, stake_output_freetx]
+        else:
+            outputs = [stake_metadata_output, stake_output_main]
+
         utxos = self.get_spendable_coins(None, nonlocal_only=True)
-        outputs = [stake_metadata_output, stake_output_main, stake_output_freetx]
         tx = self.make_unsigned_transaction(
             coins=utxos,
-            outputs=outputs
+            outputs=outputs,
+            fee=0
         )
 
-        # by default, make_unsigned_transaction executes BIP69 input/output sorting which cannot be applied in case of
-        # staking transaction, as here output order is extremly important. In order to re-generate proper output order
-        # with created change output, we alter the outputs of created tx
         def intersection(longer, shorter):
             ret = [value for value in longer if value not in shorter]
             return ret
 
         unknown_outputs = intersection(tx.outputs(), outputs)
-        inputs_amount = sum([input.value_sats() for input in tx.inputs()])
-        outputs_amount = sum([output.value for output in outputs + unknown_outputs])
-        fee_amount = inputs_amount - outputs_amount
-        if len(unknown_outputs):
-            unknown_outputs[0].value += fee_amount
         tx = PartialTransaction.from_io(
             tx.inputs(),
             outputs + unknown_outputs,
@@ -1339,7 +1346,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             version=tx.version,
             sort=False
         )
-
+        # utxo.address == self.get_staking_address()
         return tx
 
     def make_unsigned_transaction(self, *, coins: Sequence[PartialTxInput],
