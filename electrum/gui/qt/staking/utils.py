@@ -72,28 +72,32 @@ def get_sum_available_rewards(wallet: Abstract_Wallet):
             av += transactions[t].staking_info.accumulated_reward
     return av
 
-
-def get_predicted_reward(wallet: Abstract_Wallet, tx):
+def _get_estimated_reward(staking_settings, wallet, tx):
     blocks_in_year = 51840  # 360 * 24 * 6
-    staking_settings = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
-
-    percent_per_year = staking_settings['interestInfo'][str(tx['staking_info'].staking_period)]
+    percent_per_year = staking_settings['interestInfo'][str(tx.staking_info.staking_period)]
     current_height = wallet.network.get_server_height()
-    stake_amount = tx['staking_info'].staking_amount
-    stake_period = tx['staking_info'].staking_period
-    stake_deposit_height = tx['staking_info'].deposit_height
-    stake_accumulated_reward = tx['staking_info'].accumulated_reward
+    stake_amount = tx.staking_info.staking_amount
+    stake_period = tx.staking_info.staking_period
+    stake_deposit_height = tx.staking_info.deposit_height
+    stake_accumulated_reward = tx.staking_info.accumulated_reward
 
     estimated_max_reward = stake_amount * Decimal(percent_per_year) * stake_period / blocks_in_year
     mined_blocks = current_height - stake_deposit_height + 1
+
+    if mined_blocks == 0:
+        return 0
+
     estimated_max_current_reward = estimated_max_reward * Decimal(mined_blocks / stake_period)
     estimated_reward = estimated_max_reward * stake_accumulated_reward / estimated_max_current_reward
 
     return estimated_reward
 
+def get_predicted_reward(wallet: Abstract_Wallet, tx):
+    staking_settings = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
+
+    _get_estimated_reward(staking_settings, wallet, tx)
 
 def get_sum_predicted_rewards(wallet: Abstract_Wallet):
-    blocks_in_year = 51840  # 360 * 24 * 6
     staking_settings = wallet.network.run_from_another_thread(
         wallet.network.get_staking_info()
                                                               )
@@ -109,17 +113,7 @@ def get_sum_predicted_rewards(wallet: Abstract_Wallet):
                 and not tx.staking_info.paid_out
         ):
 
-            percent_per_year = staking_settings['interestInfo'][str(tx.staking_info.staking_period)]
-            current_height = wallet.network.get_server_height()
-            stake_amount = tx.staking_info.staking_amount
-            stake_period = tx.staking_info.staking_period
-            stake_deposit_height = tx.staking_info.deposit_height
-            stake_accumulated_reward = tx.staking_info.accumulated_reward
-
-            estimated_max_reward = stake_amount * Decimal(percent_per_year) * stake_period / blocks_in_year
-            mined_blocks = current_height - stake_deposit_height + 1
-            estimated_max_current_reward = estimated_max_reward * Decimal(mined_blocks / stake_period)
-            pr += estimated_max_reward * stake_accumulated_reward / estimated_max_current_reward
+            pr += _get_estimated_reward(staking_settings, wallet, tx)
     return pr
 
 
@@ -128,7 +122,6 @@ def get_predicted_rewards_data(wallet: Abstract_Wallet):
     payout_dates = []
     status = []
 
-    blocks_in_year = 51840  # 360 * 24 * 6
     transactions = wallet.db.transactions
     verified_tx = wallet.db.verified_tx
     staking_settings = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
@@ -142,17 +135,7 @@ def get_predicted_rewards_data(wallet: Abstract_Wallet):
                 and not transactions[t].staking_info.paid_out
         ):
 
-            percent_per_year = staking_settings['interestInfo'][str(tx.staking_info.staking_period)]
-
-            stake_amount = tx.staking_info.staking_amount
-            stake_period = tx.staking_info.staking_period
-            stake_deposit_height = tx.staking_info.deposit_height
-            stake_accumulated_reward = tx.staking_info.accumulated_reward
-
-            estimated_max_reward = stake_amount * Decimal(percent_per_year) * stake_period / blocks_in_year
-            mined_blocks = current_height - stake_deposit_height + 1
-            estimated_max_current_reward = estimated_max_reward * Decimal(mined_blocks / stake_period)
-            pr = estimated_max_reward * stake_accumulated_reward / estimated_max_current_reward
+            pr = _get_estimated_reward(staking_settings, wallet, tx)
 
             amounts.append(f'{pr:0.8f}')
 
