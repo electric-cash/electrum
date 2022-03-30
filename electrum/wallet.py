@@ -1314,10 +1314,9 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
     def make_unsigned_stake_deposit(self, amount_satoshi: int, period_index: int):
         min_viable_satoshi = 2137
-        output_scriptpubkey = bfh(bitcoin.address_to_script(self.get_receiving_address()))
+        output_scriptpubkey = bfh(bitcoin.address_to_script(self.get_staking_address()))
         stake_output_main = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=amount_satoshi)
 
-        self.get_staking_address()
         lu = self.network.run_from_another_thread(
             self.network.listunspent_for_scripthash(
                 bitcoin.address_to_scripthash(self.get_staking_address())))
