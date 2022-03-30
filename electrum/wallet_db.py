@@ -1104,6 +1104,11 @@ class WalletDB(JsonDB):
         # note: slicing makes a shallow copy
         return self.receiving_addresses[slice_start:slice_stop]
 
+    @locked
+    def get_staking_addresses(self, *, slice_start=None, slice_stop=None) -> List[str]:
+        # note: slicing makes a shallow copy
+        return self.staking_addresses[slice_start:slice_stop]
+
     @modifier
     def add_change_address(self, addr: str) -> None:
         assert isinstance(addr, str)
@@ -1156,13 +1161,12 @@ class WalletDB(JsonDB):
         if wallet_type == 'imported':
             self.imported_addresses = self.get_dict('addresses')  # type: Dict[str, dict]
         else:
-            self.get_dict('addresses')
-            for name in ['receiving', 'change']:
+            for name in ['receiving', 'change', 'staking']:
                 if name not in self.data['addresses']:
                     self.data['addresses'][name] = []
             self.change_addresses = self.data['addresses']['change']
             self.receiving_addresses = self.data['addresses']['receiving']
-            self.staking_addresses = self.data['addresses'].get('staking', [])
+            self.staking_addresses = self.data['addresses']['staking']
             self._addr_to_addr_index = {}  # type: Dict[str, Sequence[int]]  # key: address, value: (is_change, index)
             for i, addr in enumerate(self.receiving_addresses):
                 self._addr_to_addr_index[addr] = (0, i)

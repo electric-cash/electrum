@@ -190,6 +190,9 @@ class AddressList(MyTreeView):
             if self.wallet.is_change(address):
                 address_item[self.Columns.TYPE].setText(_('change'))
                 address_item[self.Columns.TYPE].setBackground(ColorScheme.YELLOW.as_color(True))
+            elif self.wallet.is_staking(address):
+                address_item[self.Columns.TYPE].setText(_('staking'))
+                address_item[self.Columns.TYPE].setBackground(ColorScheme.ORANGE.as_color(True))
             else:
                 address_item[self.Columns.TYPE].setText(_('receiving'))
                 address_item[self.Columns.TYPE].setBackground(ColorScheme.GREEN.as_color(True))

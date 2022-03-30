@@ -513,6 +513,11 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             return False
         return self.get_address_index(address)[0] == 1
 
+    def is_staking(self, address) -> bool:
+        if not self.is_mine(address):
+            return False
+        return self.get_address_index(address)[0] == 2
+
     @abstractmethod
     def get_address_index(self, address: str) -> Optional[AddressIndexGeneric]:
         pass
@@ -671,6 +676,10 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
     @abstractmethod
     def get_receiving_addresses(self, *, slice_start=None, slice_stop=None) -> Sequence[str]:
+        pass
+
+    @abstractmethod
+    def get_staking_addresses(self, *, slice_start=None, slice_stop=None) -> Sequence[str]:
         pass
 
     @abstractmethod
@@ -2549,6 +2558,9 @@ class Imported_Wallet(Simple_Wallet):
     def is_change(self, address):
         return False
 
+    def is_staking(self, address):
+        return False
+
     def get_all_known_addresses_beyond_gap_limit(self) -> Set[str]:
         return set()
 
@@ -2729,11 +2741,15 @@ class Deterministic_Wallet(Abstract_Wallet):
         # note: overridden so that the history can be cleared.
         # addresses are ordered based on derivation
         out = self.get_receiving_addresses()
+        out += self.get_staking_addresses()
         out += self.get_change_addresses()
         return out
 
     def get_receiving_addresses(self, *, slice_start=None, slice_stop=None):
         return self.db.get_receiving_addresses(slice_start=slice_start, slice_stop=slice_stop)
+
+    def get_staking_addresses(self, *, slice_start=None, slice_stop=None):
+        return self.db.get_staking_addresses(slice_start=slice_start, slice_stop=slice_stop)
 
     def get_change_addresses(self, *, slice_start=None, slice_stop=None):
         return self.db.get_change_addresses(slice_start=slice_start, slice_stop=slice_stop)
