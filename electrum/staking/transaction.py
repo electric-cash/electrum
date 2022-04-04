@@ -22,6 +22,7 @@ class StakingWithdrawalTxError(TxParseError):
     pass
 
 class StakingInfo(NamedTuple):
+    output_index: int
     deposit_height: int                         # height of block that mined tx
     staking_period: int                         # stake duration (in blocks)
     staking_amount: Decimal                     # amount staked (in COIN currency)

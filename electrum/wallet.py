@@ -1246,6 +1246,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         reward = sum([stake.staking_info.accumulated_reward for stake in staking_txs])
         reward = int(reward * COIN)
         inputs = [self.get_staking_utxo(tx) for tx in staking_txs]
+        inputs = [i for i in inputs if i is not None]
         inputs_amount = sum([utxo.value_sats() or 0 for utxo in inputs])
         if inputs_amount == 0:
             return None

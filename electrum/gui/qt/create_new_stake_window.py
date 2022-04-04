@@ -286,10 +286,7 @@ class CreateNewStakingWindow(WindowModalDialog):
                 )
             )
         )
-        # a = self.main_window.wallet.network.run_from_another_thread(
-        #     self.main_window.wallet.network.get_free_tx_info(address='telcash1qe4rdzf2uujyrvusd3e24mlnvf0944tczgqmda2')
-        # )
-        # free = '100 '
+
         self.free_trans_label.setText(
             _("Daily free transactions limit: ") + str(free) + ' bytes'
         )

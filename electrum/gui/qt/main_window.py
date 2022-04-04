@@ -49,6 +49,7 @@ from PyQt5.QtWidgets import (QMessageBox, QComboBox, QSystemTrayIcon, QTabWidget
 import electrum
 from electrum import (keystore, ecc, constants, util, bitcoin, commands,
                       paymentrequest, lnutil)
+from electrum import wallet
 from electrum.bitcoin import COIN, is_address
 from electrum.gui.qt.staking_list import StakingModel, StakingList
 from electrum.plugin import run_hook, BasePlugin
@@ -1002,6 +1003,16 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                     icon = read_QIcon("status_connected%s.png" % fork_str)
                 else:
                     icon = read_QIcon("status_connected_proxy%s.png" % fork_str)
+
+                try:
+                    res = self.wallet.network.run_from_another_thread(
+                        self.wallet.network.get_free_tx_info(
+                            address=self.wallet.get_staking_address()
+                            )
+                        )
+                    text +=_(f" Daily free transaction limit: {res['used_blockchain_limit']}/{res['limit']} bytes")
+                except:
+                    text +=_(f" Daily free transaction limit is zero")
         else:
             if self.network.proxy:
                 text = "{} ({})".format(_("Not connected"), _("proxy enabled"))
@@ -2305,11 +2316,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         self.balance_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.balance_label.setStyleSheet("""QLabel { padding: 0 }""")
         sb.addWidget(self.balance_label)
-
-        self.free_label = QLabel("Daily free transaction limit: 200/1000 bytes")
-        self.free_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.free_label.setStyleSheet("""QLabel { padding: 0 }""")
-        sb.addWidget(self.free_label)
 
         self.search_box = QLineEdit()
         self.search_box.textChanged.connect(self.do_search)

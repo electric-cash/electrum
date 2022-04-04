@@ -179,26 +179,6 @@ class GovernancePowerSection(Section):
         governance_power_popup.open()
 
 
-class DailyFreeTransactionLimitSection(Section):
-    TITLE_LABEL = 'Daily free transaction limit'
-
-    def display_detail_popup(self):
-        daily_free_transactions = RewardPopup(
-            parent=self._root_widget,
-            title='Daily free transactions limit',
-            text=_(
-                "This is the number of bytes you can use every day to "
-                "make free transactions. It's one of the rewards that "
-                "you can enjoy as long as you're staking. Note that if "
-                "you go over this limit, you will have to pay the network "
-                "fees."
-            ),
-            table=free_limit_list
-        )
-        free_limit_window()
-        daily_free_transactions.open()
-
-
 class RewardsWidget(QWidget):
     def __init__(self, wallet, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -219,10 +199,6 @@ class RewardsWidget(QWidget):
         self._main_layout.addLayout(self._governance_power_section.layout)
         self._main_layout.addItem(spacer_item)
 
-        self._daily_free_section = DailyFreeTransactionLimitSection(root_widget=self, wallet=self.wallet)
-        self._main_layout.addLayout(self._daily_free_section.layout)
-        self._main_layout.addItem(spacer_item)
-
     def set_available_rewards_text(self, value):
         self._available_section.text = f'{value:.8f} ELCASH'
 
@@ -232,11 +208,7 @@ class RewardsWidget(QWidget):
     def set_governance_power_text(self, value):
         self._governance_power_section.text = f'{value} GP'
 
-    def set_daily_free_transaction_limit(self, value):
-        self._daily_free_section.text = f'{value} bytes'
-
     def update(self):
         self.set_available_rewards_text(value=get_sum_available_rewards(self.wallet))
         self.set_total_predicted_staking_reward_text(value=get_sum_predicted_rewards(self.wallet))
         self.set_governance_power_text(value='14200(mock)')
-        self.set_daily_free_transaction_limit(value='980/20000(mock)')

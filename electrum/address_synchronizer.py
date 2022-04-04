@@ -785,7 +785,10 @@ class AddressSynchronizer(Logger):
 
     def get_staking_utxo(self, staking_tx: StakingDepositTx) -> Optional[PartialTxInput]:
         addr_utxos = self.get_addr_utxo(staking_tx.outputs()[staking_tx.staking_output_index].address)
-        staking_utxo = [utxo for utxo in addr_utxos.values() if utxo.prevout.txid.hex() == staking_tx.txid() and utxo.prevout.out_idx == staking_tx.staking_output_index]
+        staking_utxo = [utxo for utxo in addr_utxos.values() if \
+            utxo.prevout.txid.hex() == staking_tx.txid() \
+            and utxo.prevout.out_idx == staking_tx.staking_output_index
+            ]
         if len(staking_utxo) == 1:
             return staking_utxo[0]
         return None

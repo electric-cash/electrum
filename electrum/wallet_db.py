@@ -1161,6 +1161,8 @@ class WalletDB(JsonDB):
         if wallet_type == 'imported':
             self.imported_addresses = self.get_dict('addresses')  # type: Dict[str, dict]
         else:
+            if 'addresses' not in self.data:
+                self.data['addresses'] = {}
             for name in ['receiving', 'change', 'staking']:
                 if name not in self.data['addresses']:
                     self.data['addresses'][name] = []
