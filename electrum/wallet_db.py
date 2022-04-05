@@ -954,7 +954,7 @@ class WalletDB(JsonDB):
         stakes = {}
         for txid, tx in self.transactions.items():
             if tx.tx_type == TxType.STAKING_DEPOSIT:
-                if tx.staking_info.fulfilled == fulfilled and tx.staking_info.paid_out == paid_out:
+                if tx.staking_info is not None and tx.staking_info.fulfilled == fulfilled and tx.staking_info.paid_out == paid_out:
                     stakes[txid] = tx
         return stakes
 
