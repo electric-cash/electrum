@@ -52,7 +52,6 @@ languages = {
     'ja_JP': _('Japanese'),
     'ko_KR': _('Korean'),
     'pt_PT': _('Portuguese'),
-    'tr_TR': _('Turkish'),
     'vi_VN': _('Vietnamese'),
     'zh_CN': _('Chinese Simplified'),
 }
