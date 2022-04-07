@@ -89,9 +89,7 @@ class CreateNewStakingWindow(WindowModalDialog):
 
     def setup_description(self):
         self.description_label = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.description_label.setText(
-            _("Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, "
-              "totam rem aperiam eaque ipsa, "))
+        self.description_label.setText(_(f"The minimum stake value is {self.min_amount} ELCASH"))
         self.description_label.setMinimumSize(QtCore.QSize(300, 0))
         self.description_label.setMaximumSize(QtCore.QSize(900, 60))
         self.description_label.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
@@ -117,11 +115,11 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.amount_label.setText(_("Amount"))
         self.gridLayout.addWidget(self.amount_label, 0, 0, 1, 1)
 
-        self.amount_value_error_label.setText(_(f"The minimum stake value is {self.min_amount} ELCASH"))
+        self.amount_value_error_label.setText(_(f"Not enough coins in wallet"))
         self.amount_value_error_label.setStyleSheet('color: red')
         self.amount_value_error_label.hide()
 
-        if not self.valid_enough_coins(min_coins=self.min_amount):
+        if not self.valid_enough_coins(required_coins=self.min_amount):
             self.amount_value_error_label.show()
 
         self.gridLayout.addWidget(self.amount_value_error_label, 1, 0, 1, 5)
@@ -249,7 +247,7 @@ class CreateNewStakingWindow(WindowModalDialog):
             self.noud_table = 3
 
     def on_push_next_button(self):
-        if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
+        if self.valid_enough_coins(required_coins=self.spinBox_amount.value()):
             self.dialog = dialog = CreateNewStakingTwo(parent=self, main_window=self.main_window)
             dialog.show()
             self.hide()
@@ -260,7 +258,7 @@ class CreateNewStakingWindow(WindowModalDialog):
     def value_change(self):
         self.spinBox_amount.setRange(self.min_amount, self.get_spendable_coins())
 
-        if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
+        if self.valid_enough_coins(required_coins=self.spinBox_amount.value()):
             self.amount_value_error_label.hide()
             self.next_button.setEnabled(True)
         else:
@@ -295,8 +293,8 @@ class CreateNewStakingWindow(WindowModalDialog):
             _("Governance Power: ") + str(" ??? ") + ' GP'
         )
 
-    def valid_enough_coins(self, min_coins):
-        return self.get_spendable_coins() >= (min_coins * COIN)
+    def valid_enough_coins(self, required_coins):
+        return self.get_spendable_coins() >= (required_coins * COIN)
 
     def get_spendable_coins(self):
         coins = sum((i.value_sats() for i in self.main_window.wallet.get_spendable_coins(None, nonlocal_only=True)))
