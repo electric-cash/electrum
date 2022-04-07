@@ -278,7 +278,7 @@ class CreateNewStakingWindow(WindowModalDialog):
             _("Estimated payout: ") + str(f"{self.estimated_payout:0.8f}") + ' ELCASH'
         )
         # amount = Decimal(self.spinBox_amount.value())
-        free = self.main_window.wallet.network.run_from_another_thread(
+        free_limit = self.main_window.wallet.network.run_from_another_thread(
             self.main_window.wallet.network.get_free_tx_limit(
                 amount=self.spinBox_amount.value(),
                 index=int(list(self.staking_params.keys()).index(
@@ -288,7 +288,7 @@ class CreateNewStakingWindow(WindowModalDialog):
         )
 
         self.free_trans_label.setText(
-            _("Daily free transactions limit: ") + str(free) + ' bytes'
+            _("Daily free transactions limit: ") + str(free_limit) + ' bytes'
         )
 
         self.gp_value_label.setText(
@@ -395,7 +395,15 @@ class CreateNewStakingTwo(WindowModalDialog):
         self.fee_label_2.setText(_("Daily free transactions limit:"))
         self.data_grid_box.addWidget(self.fee_label_2, 5, 0, 1, 1)
 
-        self.fee_label.setText(str("???") + ' bytes')
+        free_limit = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_free_tx_limit(
+                amount=self.parent.spinBox_amount.value(),
+                index=int(list(self.parent.staking_params.keys()).index(
+                    str(self.parent.picked_period_in_blocks))
+                )
+            )
+        )
+        self.fee_label.setText(str(free_limit) + ' bytes')
         self.data_grid_box.addWidget(self.fee_label, 5, 1, 1, 1)
         amount = self.parent.spinBox_amount.value()
         self.amount_label_2.setText(str(amount) + _(" Elcash"))
