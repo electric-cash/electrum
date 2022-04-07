@@ -1078,9 +1078,16 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
 
     @best_effort_reliable
     @catch_server_exceptions
+    async def get_govpower(self, address):
+        data = await self.interface.get_govpower(address)
+        return data
+
+    @best_effort_reliable
+    @catch_server_exceptions
     async def get_free_tx_limit(self, index, amount):
         data = await self.interface.get_free_tx_limit(index, amount)
         return data
+
 
     def blockchain(self) -> Blockchain:
         interface = self.interface

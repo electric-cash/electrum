@@ -116,6 +116,13 @@ def get_sum_predicted_rewards(wallet: Abstract_Wallet):
             pr += _get_estimated_reward(staking_settings, wallet, tx)
     return pr
 
+def get_governance_power(wallet: Abstract_Wallet):
+    res = wallet.network.run_from_another_thread(
+        wallet.network.get_govpower(
+            address=wallet.get_staking_address()
+            )
+        )
+    return res
 
 def get_predicted_rewards_data(wallet: Abstract_Wallet):
     amounts = []

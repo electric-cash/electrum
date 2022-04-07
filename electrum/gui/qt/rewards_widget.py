@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QSpacerItem, QSizePolicy, QVBoxLayout, QLabel, QPush
 from .rewards_list import available_predicted_rewards_list, refresh_available_rewards_window, \
     refresh_predicted_rewards_window, governance_power_controller, refresh_governance_power_window, \
     governance_power_list, free_limit_list, free_limit_window
-from .staking.utils import get_sum_available_rewards, get_sum_predicted_rewards
+from .staking.utils import get_sum_available_rewards, get_sum_predicted_rewards, get_governance_power
 from .util import WindowModalDialog
 from ...i18n import _
 
@@ -211,4 +211,4 @@ class RewardsWidget(QWidget):
     def update(self):
         self.set_available_rewards_text(value=get_sum_available_rewards(self.wallet))
         self.set_total_predicted_staking_reward_text(value=get_sum_predicted_rewards(self.wallet))
-        self.set_governance_power_text(value='14200(mock)')
+        self.set_governance_power_text(value=get_governance_power(self.wallet))

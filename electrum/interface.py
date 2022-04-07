@@ -1040,6 +1040,16 @@ class Interface(Logger):
 
         return res
 
+    async def get_govpower(self, address):
+        """
+        address: address where is any active stake
+        """
+        res = await self.session.send_request('blockchain.get_gov_power', [address])
+
+        # assert_dict_contains_field(res, field_name='test')
+
+        return res
+
     async def get_free_tx_limit(self, index=0, amount=5):
         """
         index: range 0 - 3 (stake period index)
