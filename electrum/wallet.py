@@ -1324,14 +1324,14 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
         if not any(d['value'] == 2137 for d in lu):
             stake_output_freetx = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=min_viable_satoshi)
-            is_free_output = True
+            is_not_free_output = True
         else:
-            is_free_output = False
+            is_not_free_output = False
 
         stake_metadata_output_scriptpubkey = bfh(get_staking_metadata_output_script(period_index, 1))
         stake_metadata_output = PartialTxOutput(scriptpubkey=stake_metadata_output_scriptpubkey, value=0)
 
-        if is_free_output:
+        if is_not_free_output:
             outputs = [stake_metadata_output, stake_output_main, stake_output_freetx]
         else:
             outputs = [stake_metadata_output, stake_output_main]
