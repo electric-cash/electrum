@@ -195,15 +195,15 @@ class CoinChooserBase(Logger):
             remaining -= amount
             n -= 1
 
-        # Last change output.  Round down to maximum precision but lose
-        # no more than 10**max_dp_to_round_for_privacy
-        # e.g. a max of 2 decimal places means losing 100 satoshis to fees
-        max_dp_to_round_for_privacy = 2 if self.enable_output_value_rounding else 0
-        N = int(pow(10, min(max_dp_to_round_for_privacy, zeroes[0])))
-        amount = (remaining // N) * N
-        amounts.append(amount)
+        # # Last change output.  Round down to maximum precision but lose
+        # # no more than 10**max_dp_to_round_for_privacy
+        # # e.g. a max of 2 decimal places means losing 100 satoshis to fees
+        # max_dp_to_round_for_privacy = 2 if self.enable_output_value_rounding else 0
+        # N = int(pow(10, min(max_dp_to_round_for_privacy, zeroes[0])))
+        # amount = (remaining // N) * N
+        amounts.append(remaining)
 
-        assert sum(amounts) <= change_amount
+        assert sum(amounts) == change_amount
 
         return amounts
 
