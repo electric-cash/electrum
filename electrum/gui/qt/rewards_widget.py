@@ -206,7 +206,7 @@ class RewardsWidget(QWidget):
         self._predicted_section.text = f'{value:.8f} ELCASH'
 
     def set_governance_power_text(self, value):
-        self._governance_power_section.text = f'{value} GP'
+        self._governance_power_section.text = f'{value/100000000.0} GP'
 
     def update(self):
         self.set_available_rewards_text(value=get_sum_available_rewards(self.wallet))

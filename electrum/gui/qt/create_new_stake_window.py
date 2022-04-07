@@ -290,7 +290,7 @@ class CreateNewStakingWindow(WindowModalDialog):
         )
 
         self.gp_value_label.setText(
-            _("Governance Power: ") + str(" ??? ") + ' GP'
+            _("Governance Power: ") + str(f'{48*self.reward:0.8f}') + ' GP'
         )
 
     def valid_enough_coins(self, required_coins):
@@ -376,8 +376,6 @@ class CreateNewStakingTwo(WindowModalDialog):
     def setup_detail(self):
         self.payout_label_2.setText(str(f"{self.parent.reward:0.8f}") + ' ELCASH')
         self.data_grid_box.addWidget(self.payout_label_2, 7, 1, 1, 1)
-        self.gp_label_2.setText(str('???') + ' GP')
-        self.data_grid_box.addWidget(self.gp_label_2, 4, 1, 1, 1)
         self.payout_label.setText(_("Estimated payout:"))
         self.data_grid_box.addWidget(self.payout_label, 7, 0, 1, 1)
         self.block_label.setText(_("Block required:"))
@@ -388,7 +386,11 @@ class CreateNewStakingTwo(WindowModalDialog):
         self.rewards_label.setFont(font)
         self.rewards_label.setText(_("Predicted rewards:"))
         self.data_grid_box.addWidget(self.rewards_label, 6, 0, 1, 1)
+
         self.gp_label.setText(_("Governance Power:"))
+        self.gp_label_2.setText(str(f"{48*self.parent.reward:0.8f}") + ' GP')
+        self.data_grid_box.addWidget(self.gp_label_2, 4, 1, 1, 1)
+
         self.data_grid_box.addWidget(self.gp_label, 4, 0, 1, 1)
         self.fee_label_2.setText(_("Daily free transactions limit:"))
         self.data_grid_box.addWidget(self.fee_label_2, 5, 0, 1, 1)

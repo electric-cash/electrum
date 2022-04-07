@@ -160,6 +160,8 @@ class StakedDialog(BaseStakingTxDialog):
         self.password = None
 
     def insert_data(self, vbox):
+        predicted_reward = get_predicted_reward(self.wallet, self.detail_tx)
+
         hbox_stats = QHBoxLayout()
 
         # left column
@@ -220,7 +222,7 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_gp = QHBoxLayout()
         gp_lab = QLabel(_("Governance Power:"))
         hbox_gp.addWidget(gp_lab)
-        gp_lab_data = QLabel("??? GP")
+        gp_lab_data = QLabel(f"{48*predicted_reward:.8f} GP")
         hbox_gp.addWidget(gp_lab_data)
         vbox_right.addLayout(hbox_gp)
 
@@ -239,8 +241,7 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Estimated payout:"))
         hbox_payout.addWidget(p_lab)
-        ep = get_predicted_reward(self.wallet, self.detail_tx)
-        p_lab_data = QLabel(f"{ep:.8f} ELCASH")
+        p_lab_data = QLabel(f"{predicted_reward:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
         vbox_right.addStretch(1)
@@ -379,7 +380,7 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         hbox_gp = QHBoxLayout()
         gp_lab = QLabel(_("Governance Power:"))
         hbox_gp.addWidget(gp_lab)
-        gp_lab_data = QLabel("????")
+        gp_lab_data = QLabel(f"{48*self.data.staking_info.accumulated_reward:.8f} GP")
         hbox_gp.addWidget(gp_lab_data)
         vbox_right.addLayout(hbox_gp)
 
