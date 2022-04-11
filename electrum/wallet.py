@@ -1505,8 +1505,8 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
     def can_unstake_coin(self, utxo: PartialTxInput) -> bool:
         funding_tx = self.db.get_transaction(utxo.prevout.txid.hex())
         if self.is_staked_coin(utxo):
-            if hasattr(funding_tx,
-                       'staking_info') and funding_tx.staking_info.fulfilled and not funding_tx.staking_info.paid_out:
+            if hasattr(funding_tx, 'staking_info') and funding_tx.staking_info.fulfilled and not funding_tx.staking_info.paid_out \
+                           and not (hasattr(self, 'in_claiming') and funding_tx['txid'] in self.in_claiming):
                 return True
         return False
 

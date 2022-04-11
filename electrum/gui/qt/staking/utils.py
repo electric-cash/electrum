@@ -31,7 +31,9 @@ def get_data_for_available_rewards_tab(wallet: Abstract_Wallet):
 
     for t in transactions:
         if transactions[t].tx_type.name == 'STAKING_DEPOSIT' \
-                and transactions[t].staking_info.fulfilled and not transactions[t].staking_info.paid_out:
+                and transactions[t].staking_info is not None \
+                and transactions[t].staking_info.fulfilled and not transactions[t].staking_info.paid_out \
+                and not (hasattr(wallet, 'in_claiming') and t in wallet.in_claiming):
             finish_height = transactions[t].staking_info.deposit_height + transactions[t].staking_info.staking_period
             block_header = wallet.network.run_from_another_thread(
                 wallet.network.get_block_header(finish_height, 'catchup'))
@@ -68,6 +70,7 @@ def get_sum_available_rewards(wallet: Abstract_Wallet):
                 and transactions[t].staking_info
                 and transactions[t].staking_info.fulfilled
                 and not transactions[t].staking_info.paid_out
+                and not (hasattr(wallet, 'in_claiming') and t in wallet.in_claiming)
         ):
             av += transactions[t].staking_info.accumulated_reward
     return av

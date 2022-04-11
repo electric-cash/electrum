@@ -329,6 +329,8 @@ class StakingNode(CustomNode):
                 return QVariant(_('Staked'))
             if staking_info.fulfilled and staking_info.paid_out:
                 return QVariant(_('Claimed'))
+            elif staking_info.fulfilled and hasattr(window.wallet, 'in_claiming') and tx_hash in window.wallet.in_claiming:
+                return QVariant(_('In Claiming'))
             elif staking_info.fulfilled:
                 return QVariant(_('Completed'))
             else:

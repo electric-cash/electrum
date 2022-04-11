@@ -46,15 +46,6 @@ from .terms_and_conditions_mixin import load_terms_and_conditions
 from .util import read_QIcon, WindowModalDialog, OkButton
 
 
-def get_verbal_type_name(stack_data):
-    if not stack_data['fulfilled'] and not stack_data['paid_out']:
-        return 'Staked'
-    if stack_data['fulfilled'] and stack_data['paid_out']:
-        return 'Unstaked'
-    elif stack_data['fulfilled']:
-        return 'Completed'
-
-
 def get_block_left(data, current_height):
     blocks_left = (data['deposit_height'] + data['staking_period']) - current_height
     if blocks_left > 0:
@@ -167,10 +158,25 @@ class StakingTabQWidget(QWidget):
             claim_dialog.show()
         else:
             self.claim_rewards_unlocked()
+        self.claim_rewards_button.setDisabled(True)
 
     def claim_rewards_unlocked(self):
         staking_txs = self.parent.wallet.db.get_stakes(fulfilled=True, paid_out=False)
-        tx = self.parent.wallet.make_unsigned_claim_stake_transaction(staking_txs.keys())
+
+        staking_txs = [tx for tx in staking_txs if not (hasattr(self.parent.wallet, 'in_claiming') and tx in self.parent.wallet.in_claiming)]
+
+        if len(staking_txs) == 0:
+            return
+
+        tx = self.parent.wallet.make_unsigned_claim_stake_transaction(staking_txs)
+
+        if hasattr(self.parent.wallet, 'in_claiming'):
+            self.parent.wallet.in_claiming.extend(staking_txs)
+        else:
+            self.parent.wallet.in_claiming = staking_txs
+
+        if tx is None:
+            return
 
         def sign_done(success):
             if success:

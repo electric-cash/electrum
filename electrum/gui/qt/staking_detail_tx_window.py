@@ -416,6 +416,9 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         self.claim_reword_button = QPushButton(_("Claim Reward"))
         self.claim_reword_button.clicked.connect(self.on_push_claim)
 
+        if hasattr(self.wallet, "in_claiming") and self.detail_tx['txid'] in self.wallet.in_claiming:
+            self.claim_reword_button.setDisabled(True)
+
         self.close_button = QPushButton(_("Close"))
         self.close_button.clicked.connect(self.on_push_close)
 
@@ -463,6 +466,11 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
         finish_dialog.finished.connect(self.on_push_close)
         finish_dialog.show()
+        if not hasattr(self.wallet, "in_claiming"):
+            self.wallet.in_claiming = []
+
+        self.wallet.in_claiming.append(self.detail_tx['txid'])
+        self.claim_reword_button.setDisabled(True)
 
 
 class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
