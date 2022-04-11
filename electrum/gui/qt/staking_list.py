@@ -632,7 +632,7 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
         cc = self.add_copy_menu(menu, idx)
         cc.addAction(_("Transaction ID"), lambda: self.place_text_on_clipboard(tx_hash, title="TXID"))
 
-        menu.addAction(_("View Transaction"), lambda: self.show_transaction(tx_item, tx))
+        menu.addAction(_("View Stake Info"), lambda: self.show_transaction(tx_item, tx))
         channel_id = tx_item.get('channel_id')
         if channel_id:
             menu.addAction(_("View Channel"), lambda: self.parent.show_channel(bytes.fromhex(channel_id)))
