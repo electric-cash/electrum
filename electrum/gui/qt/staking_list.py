@@ -53,6 +53,7 @@ from .util import (read_QIcon, MONOSPACE_FONT, Buttons, CancelButton, OkButton,
 
 from electrum.staking.tx_type import TxType
 
+from electrum.gui.qt.util import custom_message_box
 
 if TYPE_CHECKING:
     from electrum.wallet import Abstract_Wallet
@@ -568,7 +569,13 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
             CompletedSingleClaimedStakeDialog, UnstakedSingleStakeDialog
         staking_info = tx_item['staking_info']
 
-        if not staking_info.fulfilled and not staking_info.paid_out:
+        if staking_info is None:
+            custom_message_box(icon=QMessageBox.Information,
+                   parent=self,
+                   title=_('Transaction not ready'),
+                   text=_('Please wait for staking transaction to be loaded into Blockchain.'))
+
+        elif not staking_info.fulfilled and not staking_info.paid_out:
             self.staking_dialog = StakedDialog(self, tx, tx_item)
             self.staking_dialog.open()
 
@@ -579,6 +586,13 @@ class StakingList(MyTreeView, AcceptFileDragDrop):
         elif staking_info.fulfilled and staking_info.paid_out:
             self.completed_stake_dialog = CompletedSingleClaimedStakeDialog(self, tx, tx_item)
             self.completed_stake_dialog.open()
+
+        elif staking_info.fulfilled and not staking_info.paid_out \
+            and (hasattr(self.wallet, 'in_claiming') and tx_item['txid'] in self.wallet.in_claiming):
+            custom_message_box(icon=QMessageBox.Information,
+                   parent=self,
+                   title=_('Transaction in Claiming'),
+                   text=_('Please wait.'))
 
         elif staking_info.fulfilled and not staking_info.paid_out:
             self.completed_ready_to_claim_dialog = CompletedReadyToClaimStakeDialog(self, tx, tx_item)

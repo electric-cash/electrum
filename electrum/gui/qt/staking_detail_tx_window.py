@@ -160,7 +160,7 @@ class StakedDialog(BaseStakingTxDialog):
         self.password = None
 
     def insert_data(self, vbox):
-        predicted_reward = get_predicted_reward(self.wallet, self.detail_tx)
+        predicted_reward = get_predicted_reward(self.wallet, self.wallet.db.transactions[self.detail_tx["txid"]])
 
         hbox_stats = QHBoxLayout()
 
@@ -555,6 +555,8 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
     def add_buttons(self):
         self.close_button = QPushButton(_("Close"))
         self.close_button.setVisible(True)
+        self.close_button.clicked.connect(self.on_push_close)
+
         self.restake_button = QPushButton(_("Restake"))
         self.restake_button.setVisible(True)
         self.restake_button.clicked.connect(self.on_push_restake)
@@ -566,6 +568,9 @@ class CompletedSingleClaimedStakeDialog(BaseStakingTxDialog):
         hbox.addStretch(1)
         hbox.addLayout(Buttons(*self.buttons))
         self.vbox.addLayout(hbox)
+
+    def on_push_close(self):
+        self.close()
 
     def on_push_restake(self):
         self.restake_window = CreateNewStakingWindow(
@@ -659,17 +664,18 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
     def add_buttons(self):
         self.close_button = QPushButton(_("Close"))
         self.close_button.setVisible(True)
-        self.restake_button = QPushButton(_("Restake"))
-        self.restake_button.setVisible(True)
+        self.close_button.clicked.connect(self.on_push_close)
 
         # Action buttons (right side)
-        self.buttons = [self.restake_button, self.close_button]
+        self.buttons = [self.close_button]
         self.hbox = hbox = QHBoxLayout()
 
         hbox.addStretch(1)
         hbox.addLayout(Buttons(*self.buttons))
         self.vbox.addLayout(hbox)
 
+    def on_push_close(self):
+        self.close()
 
 class UnstakeDialog(WindowModalDialog):
 

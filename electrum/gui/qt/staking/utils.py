@@ -77,7 +77,8 @@ def get_sum_available_rewards(wallet: Abstract_Wallet):
 
 def _get_estimated_reward(staking_settings, wallet, tx):
     blocks_in_year = 51840  # 360 * 24 * 6
-    percent_per_year = staking_settings['interestInfo'][str(tx.staking_info.staking_period)]
+    intrest_info = staking_settings['interestInfo']
+    percent_per_year = intrest_info[str(tx.staking_info.staking_period)]
     current_height = wallet.network.get_server_height()
     stake_amount = tx.staking_info.staking_amount
     stake_period = tx.staking_info.staking_period
@@ -98,7 +99,7 @@ def _get_estimated_reward(staking_settings, wallet, tx):
 def get_predicted_reward(wallet: Abstract_Wallet, tx):
     staking_settings = wallet.network.run_from_another_thread(wallet.network.get_staking_info())
 
-    _get_estimated_reward(staking_settings, wallet, tx)
+    return _get_estimated_reward(staking_settings, wallet, tx)
 
 def get_sum_predicted_rewards(wallet: Abstract_Wallet):
     staking_settings = wallet.network.run_from_another_thread(
