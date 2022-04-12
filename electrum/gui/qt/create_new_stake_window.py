@@ -275,13 +275,14 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.estimate_label.setText(
             _("Estimated payout: ") + str(f"{self.estimated_payout:0.8f}") + ' ELCASH'
         )
-        # amount = Decimal(self.spinBox_amount.value())
-        free_limit = self.main_window.wallet.network.run_from_another_thread(
-            self.main_window.wallet.network.get_free_tx_limit(
-                amount=self.spinBox_amount.value(),
-                index=int(list(self.staking_params.keys()).index(
+        amount=self.spinBox_amount.value()
+        index=int(list(self.staking_params.keys()).index(
                     str(self.picked_period_in_blocks))
                 )
+        free_limit = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_free_tx_limit(
+                amount=amount,
+                index=index
             )
         )
 

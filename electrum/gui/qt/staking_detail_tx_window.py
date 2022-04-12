@@ -226,10 +226,19 @@ class StakedDialog(BaseStakingTxDialog):
         hbox_gp.addWidget(gp_lab_data)
         vbox_right.addLayout(hbox_gp)
 
+        amount = self.detail_tx["staking_info"].staking_amount
+        index = self.data.staking_period_index
+        free_limit = self.wallet.network.run_from_another_thread(
+            self.wallet.network.get_free_tx_limit(
+                amount=float(amount),
+                index=index
+            )
+        )
+
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Daily free transaction limit:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel("??? bytes")
+        p_lab_data = QLabel(f"{free_limit} Bytes")
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
@@ -397,10 +406,19 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         hbox_rh.addWidget(rh_lab)
         vbox_right.addLayout(hbox_rh)
 
+        amount = self.detail_tx["staking_info"].staking_amount
+        index = self.data.staking_period_index
+        free_limit = self.wallet.network.run_from_another_thread(
+            self.wallet.network.get_free_tx_limit(
+                amount=float(amount),
+                index=index
+            )
+        )
+
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Daily free transaction limit:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel("????")
+        p_lab_data = QLabel(f"{free_limit} Bytes") #TODO fix this
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
