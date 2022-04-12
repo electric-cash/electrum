@@ -1010,7 +1010,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                             address=self.wallet.get_staking_address()
                             )
                         )
-                    text +=_(f" Daily free transaction limit: {res['used_blockchain_limit']}/{res['limit']} bytes")
+                    text +=_(f" Used daily free transaction limit: {res['used_blockchain_limit']}/{res['limit']} Bytes")
                 except:
                     text +=_(f" Daily free transaction limit is zero")
         else:
@@ -1715,60 +1715,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             coins=inputs,
             outputs=outputs,
             fee=fee_est,
-            is_sweep=is_sweep,
-        )
-        output_values = [x.value for x in outputs]
-        if output_values.count('!') > 1:
-            self.show_error(_("More than one output set to spend max"))
-            return
-
-        output_value = '!' if '!' in output_values else sum(output_values)
-        d = ConfirmTxDialog(window=self, make_tx=make_tx, output_value=output_value, is_sweep=is_sweep)
-        if d.not_enough_funds:
-            # Check if we had enough funds excluding fees,
-            # if so, still provide opportunity to set lower fees.
-            if not d.have_enough_funds_assuming_zero_fees():
-                text = self.get_text_not_enough_funds_mentioning_frozen()
-                self.show_message(text)
-                return
-
-        # shortcut to advanced preview (after "enough funds" check!)
-        if self.config.get('advanced_preview'):
-            self.preview_tx_dialog(make_tx=make_tx,
-                                   external_keypairs=external_keypairs)
-            return
-
-        cancelled, is_send, password, tx = d.run()
-        if cancelled:
-            return
-        if is_send:
-            self.save_pending_invoice()
-
-            def sign_done(success):
-                if success:
-                    self.broadcast_or_show(tx)
-
-            self.sign_tx_with_password(tx, callback=sign_done, password=password,
-                                       external_keypairs=external_keypairs)
-        else:
-            self.preview_tx_dialog(make_tx=make_tx,
-                                   external_keypairs=external_keypairs)
-
-    def pay_free_onchain_dialog(
-            self,
-            inputs: Sequence[PartialTxInput],
-            outputs: List[PartialTxOutput],
-            *,
-            external_keypairs=None,
-    ) -> None:
-        # trustedcoin requires this
-        if run_hook('abort_send', self):
-            return
-        is_sweep = bool(external_keypairs)
-        make_tx = lambda fee_est: self.wallet.make_unsigned_transaction(
-            coins=inputs,
-            outputs=outputs,
-            fee=0,
             is_sweep=is_sweep,
         )
         output_values = [x.value for x in outputs]

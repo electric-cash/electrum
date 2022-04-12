@@ -287,7 +287,7 @@ class CreateNewStakingWindow(WindowModalDialog):
         )
 
         self.free_trans_label.setText(
-            _("Daily free transactions limit: ") + str(free_limit) + ' bytes'
+            _("Daily free transactions limit: ") + str(free_limit) + ' Bytes'
         )
 
         self.gp_value_label.setText(

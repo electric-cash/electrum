@@ -417,7 +417,7 @@ class CompletedReadyToClaimStakeDialog(BaseStakingTxDialog):
         hbox_fee = QHBoxLayout()
         p_lab = QLabel(_("Daily free transaction limit:"))
         hbox_fee.addWidget(p_lab)
-        p_lab_data = QLabel(f"{free_limit} Bytes") #TODO fix this
+        p_lab_data = QLabel(f"{free_limit} Bytes")
         hbox_fee.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_fee)
 
