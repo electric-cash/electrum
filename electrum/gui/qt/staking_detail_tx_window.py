@@ -62,15 +62,14 @@ def refresh_stake_dialog_window(data):
             'Tx ID': [data.detail_tx['txid'], ],
             'Staked Amount': [str(data.data.staking_info.staking_amount), ],
             'Payout': [str(data.data.staking_info.accumulated_reward), ],
-            'GP': ['?'],
-            'Daily Tx Limit': ['?'],
+            'Daily Tx Limit': ['0'],
         },
     )
 
 
 tx_list = TxList(
     starting_empty_cells=1,
-    column_names=['Tx ID', 'Staked Amount', 'Payout', 'GP', 'Daily Tx Limit'],
+    column_names=['Tx ID', 'Staked Amount', 'Payout', 'Daily Tx Limit'],
     resize_column=0
 )
 
@@ -603,7 +602,6 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         self.data = data
         self.detail_tx = detail_tx
         self.main_window = parent
-        self.tx_table = tx_list
         super().__init__(parent, data, detail_tx)
         self.insert_data(self.vbox)
         self.add_buttons()
@@ -651,7 +649,7 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
         hbox_payout = QHBoxLayout()
         p_lab = QLabel(_("Payout") + ':')
         hbox_payout.addWidget(p_lab)
-        payout = self.data.staking_info.staking_amount * decimal.Decimal(100-self.wallet.network.staking_info['penalty'])
+        payout = self.data.staking_info.staking_amount * decimal.Decimal(1.0-self.wallet.network.staking_info['penalty'])
         p_lab_data = QLabel(f"{payout:.8f} ELCASH")
         hbox_payout.addWidget(p_lab_data)
         vbox_right.addLayout(hbox_payout)
@@ -676,8 +674,6 @@ class UnstakedSingleStakeDialog(BaseStakingTxDialog):
 
         vbox.addLayout(hbox_stats)
         vbox.addStretch(1)
-        vbox.addWidget(self.tx_table)
-        refresh_stake_dialog_window(data=self)
 
     def add_buttons(self):
         self.close_button = QPushButton(_("Close"))
