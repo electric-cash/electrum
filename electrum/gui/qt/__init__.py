@@ -59,6 +59,7 @@ from .network_dialog import NetworkDialog
 from .stylesheet_patcher import patch_qt_stylesheet
 from .lightning_dialog import LightningDialog
 from .watchtower_dialog import WatchtowerDialog
+from ...version import TERMS_AND_CONDITION_VERSION
 
 if TYPE_CHECKING:
     from electrum.daemon import Daemon
@@ -348,12 +349,12 @@ class ElectrumGui(Logger):
 
     def accept_terms_and_conditions(self):
         config_key = 'terms_and_conditions_accepted'
-        if not self.config.get(config_key, False):
+        if float(not self.config.get(config_key, 0)) < TERMS_AND_CONDITION_VERSION:
             wizard = InstallWizard(self.config, self.app, self.plugins, gui_object=self)
             accepted = wizard.accept_terms_and_conditions()
             wizard.terminate()
             if accepted:
-                self.config.set_key(config_key, True)
+                self.config.set_key(config_key, TERMS_AND_CONDITION_VERSION)
             else:
                 self.stop()
                 raise TermsNotAccepted

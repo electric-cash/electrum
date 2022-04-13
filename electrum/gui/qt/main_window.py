@@ -61,7 +61,7 @@ from electrum.util import (format_time,
                            get_new_wallet_name, send_exception_to_crash_reporter,
                            InvalidElcashURI, maybe_extract_bolt11_invoice, NotEnoughFunds,
                            NoDynamicFeeEstimates, MultipleSpendMaxTxOutputs,
-                           AddTransactionException)
+                           AddTransactionException, resource_path)
 from electrum.invoices import PR_TYPE_ONCHAIN, PR_TYPE_LN, PR_DEFAULT_EXPIRATION_WHEN_CREATING, Invoice
 from electrum.invoices import PR_PAID, get_pr_expiration_values, LNInvoice, OnchainInvoice
 from electrum.transaction import (Transaction, PartialTxInput,
@@ -69,7 +69,7 @@ from electrum.transaction import (Transaction, PartialTxInput,
 from electrum.wallet import (Multisig_Wallet, CannotBumpFee, Abstract_Wallet,
                              sweep_preparations, InternalAddressCorruption,
                              CannotDoubleSpendTx)
-from electrum.version import ELECTRUM_VERSION
+from electrum.version import ELECTRUM_VERSION, TERMS_AND_CONDITION_LAST_UPDATE
 from electrum.network import (Network, TxBroadcastError, BestEffortRequestFailed,
                               UntrustedServerReturnedError, NetworkException)
 from electrum.exchange_rate import FxThread
@@ -818,6 +818,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         text_browser.setHtml(terms)
         vbox.addWidget(text_browser)
         footer = QHBoxLayout()
+        footer.addWidget(QLabel(_('Last updated: {date}').format(date=TERMS_AND_CONDITION_LAST_UPDATE)))
         footer.addStretch(1)
         footer.addWidget(OkButton(dialog))
         vbox.addLayout(footer)
