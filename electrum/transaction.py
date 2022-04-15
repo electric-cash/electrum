@@ -1133,6 +1133,9 @@ class PartialTxInput(TxInput, PSBTSection):
         self._is_p2sh_segwit = None  # type: Optional[bool]  # None means unknown
         self._is_native_segwit = None  # type: Optional[bool]  # None means unknown
 
+    def __repr__(self) -> str:
+        return f"Input {self._trusted_value_sats} {self._trusted_address}"
+
     @property
     def utxo(self):
         return self._utxo
@@ -1470,6 +1473,9 @@ class PartialTxOutput(TxOutput, PSBTSection):
         self.is_mine = False  # type: bool  # whether the wallet considers the output to be ismine
         self.is_change = False  # type: bool  # whether the wallet considers the output to be change
 
+    def __repr__(self) -> str:
+        return f"Output {self.value} {self.address}"
+
     def to_json(self):
         d = super().to_json()
         d.update({
@@ -1547,6 +1553,11 @@ class PartialTransaction(Transaction):
         self._inputs = []  # type: List[PartialTxInput]
         self._outputs = []  # type: List[PartialTxOutput]
         self._unknown = {}  # type: Dict[bytes, bytes]
+
+    def __repr__(self) -> str:
+        inputs_value = sum([i._trusted_value_sats for i in self._inputs])
+        outputs_value = sum([out.value for out in self._outputs])
+        return f"Transaction in {inputs_value} - out {outputs_value} = {inputs_value-outputs_value} | ins {len(self._inputs)} outs {len(self._outputs)}"
 
     def to_json(self) -> dict:
         d = super().to_json()
@@ -1757,6 +1768,10 @@ class PartialTransaction(Transaction):
     def add_inputs(self, inputs: List[PartialTxInput]) -> None:
         self._inputs.extend(inputs)
         self.BIP69_sort(outputs=False)
+        self.invalidate_ser_cache()
+
+    def add_unsorted_inputs(self, inputs: List[PartialTxInput]) -> None:
+        self._inputs.extend(inputs)
         self.invalidate_ser_cache()
 
     def add_outputs(self, outputs: List[PartialTxOutput]) -> None:

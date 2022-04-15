@@ -101,6 +101,11 @@ class TxEditor:
 
             self.can_be_free = self.tx.estimated_size() <= self.get_free_tx_limit()
 
+            # when free tx is too big 
+            if not self.can_be_free and self.is_free:
+                self.is_free = False
+                self.tx = self.make_tx(fee_estimator)
+
             self.not_enough_funds = False
             self.no_dynfee_estimates = False
         except NotEnoughFunds:
@@ -243,13 +248,6 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         else:
             self.is_free = False
 
-        # Disabled
-        self.fee_rate_label.setDisabled(self.is_free)
-        self.preview_button.setDisabled(self.is_free)
-
-        # not Visible
-        self.fee_slider.setVisible(not self.is_free)
-
         self.needs_update = True
 
     def _update_amount_label(self):
@@ -267,6 +265,16 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
 
     def update(self):
         self.free_checkbox.setDisabled(not self.can_be_free)
+        self.free_checkbox.setCheckState(Qt.Checked if self.is_free else Qt.Unchecked)
+
+        # Disabled when self.is_free
+        self.fee_rate_label.setDisabled(self.is_free)
+        self.preview_button.setDisabled(self.is_free)
+
+        # not Visible when self.is_free
+        self.fee_slider.setVisible(not self.is_free)
+
+
         tx = self.tx
         self._update_amount_label()
 

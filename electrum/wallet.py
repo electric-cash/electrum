@@ -664,6 +664,19 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             db=self.db
         )
 
+    def get_free_tx_coins(self, domain, *, nonlocal_only=False) -> Sequence[PartialTxInput]:
+        confirmed_only = self.config.get('confirmed_only', False)
+        utxos = self.get_utxos(domain,
+                               excluded_addresses=self.frozen_addresses,
+                               mature_only=True,
+                               confirmed_only=confirmed_only,
+                               nonlocal_only=nonlocal_only)
+        utxos = [utxo for utxo in utxos if not self.is_not_free_tx_coin(utxo)]
+        return filter_spendable_coins(
+            utxos=utxos,
+            db=self.db
+        )
+
     def get_finished_staked_coins(self):
         confirmed_only = self.config.get('confirmed_only', False)
         utxos = self.get_utxos(None,
@@ -1340,7 +1353,8 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         tx = self.make_unsigned_transaction(
             coins=utxos,
             outputs=outputs,
-            fee=0
+            fee=0,
+            stake_transaction=True
         )
 
         def intersection(longer, shorter):
@@ -1360,13 +1374,22 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
 
     def make_unsigned_transaction(self, *, coins: Sequence[PartialTxInput],
                                   outputs: List[PartialTxOutput], fee=None,
-                                  change_addr: str = None, is_sweep=False) -> PartialTransaction:
+                                  change_addr: str = None, is_sweep=False, stake_transaction=False) -> PartialTransaction:
 
         if any([c.already_has_some_signatures() for c in coins]):
             raise Exception("Some inputs already contain signatures!")
 
         # prevent side-effect with '!'
         outputs = copy.deepcopy(outputs)
+
+        free_flaging_tx_utxo = []
+        if fee == 0 and not stake_transaction:
+            min_viable_satoshi = 2137
+            output_scriptpubkey = bfh(bitcoin.address_to_script(self.get_staking_address()))
+            stake_output_freetx = PartialTxOutput(scriptpubkey=output_scriptpubkey, value=min_viable_satoshi)
+            outputs.append(stake_output_freetx)
+            free_flaging_tx_utxo.append(self.get_free_tx_coins(None, nonlocal_only=True)[0])
+            pass
 
         # check outputs
         i_max = None
@@ -1423,7 +1446,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             # change address. if empty, coin_chooser will set it
             change_addrs = self.get_change_addresses_for_new_transaction(change_addr or old_change_addrs)
             tx = coin_chooser.make_tx(coins=coins,
-                                      inputs=txi,
+                                      inputs=free_flaging_tx_utxo+txi,
                                       outputs=list(outputs) + txo,
                                       change_addrs=change_addrs,
                                       fee_estimator_vb=fee_estimator,
@@ -1438,7 +1461,7 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
             #       being spent if the user manually selected UTXOs.
             sendable = sum(map(lambda c: c.value_sats(), coins))
             outputs[i_max].value = 0
-            tx = PartialTransaction.from_io(list(coins), list(outputs))
+            tx = PartialTransaction.from_io(free_flaging_tx_utxo+list(coins), list(outputs), sort=False)
             fee = fee_estimator(tx.estimated_size())
             amount = sendable - tx.output_value() - fee
             if amount < 0:
@@ -1474,6 +1497,12 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         prevout_str = utxo.prevout.to_str()
         # if utxo.value_sats() == 2137:  # and is staking address?
         if utxo.address == self.get_staking_address() and utxo.value_sats() == 2137:
+            return True
+        return prevout_str in self.frozen_coins
+
+    def is_not_free_tx_coin(self, utxo: PartialTxInput) -> bool:
+        prevout_str = utxo.prevout.to_str()
+        if not utxo.address == self.get_staking_address() or not utxo.value_sats() == 2137:
             return True
         return prevout_str in self.frozen_coins
 
