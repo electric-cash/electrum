@@ -349,7 +349,10 @@ class ElectrumGui(Logger):
 
     def accept_terms_and_conditions(self):
         config_key = 'terms_and_conditions_accepted'
-        if float(not self.config.get(config_key, 0)) < TERMS_AND_CONDITION_VERSION:
+
+        if self.config.get(config_key, None) is None \
+        or float(self.config.get(config_key, 0)) != TERMS_AND_CONDITION_VERSION:
+
             wizard = InstallWizard(self.config, self.app, self.plugins, gui_object=self)
             accepted = wizard.accept_terms_and_conditions()
             wizard.terminate()
