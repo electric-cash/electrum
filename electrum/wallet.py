@@ -1496,8 +1496,18 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
     def is_frozen_coin(self, utxo: PartialTxInput) -> bool:
         prevout_str = utxo.prevout.to_str()
         # if utxo.value_sats() == 2137:  # and is staking address?
-        if utxo.address == self.get_staking_address() and utxo.value_sats() == 2137:
+
+        try:
+            staking_address = self.get_staking_address()
+        except Exception:
+            staking_address = None
+
+        if staking_address is not None and \
+            utxo.address == staking_address and \
+            utxo.value_sats() == 2137:
+
             return True
+
         return prevout_str in self.frozen_coins
 
     def is_not_free_tx_coin(self, utxo: PartialTxInput) -> bool:
@@ -2602,6 +2612,9 @@ class Imported_Wallet(Simple_Wallet):
 
     def get_receiving_addresses(self, **kwargs):
         return self.get_addresses()
+
+    def get_staking_addresses(self, *, slice_start=None, slice_stop=None) -> Sequence[str]:
+        return []
 
     def get_change_addresses(self, **kwargs):
         return []

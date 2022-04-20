@@ -1172,6 +1172,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed('mix total present junior leader live state athlete mistake crack wall valve',
                                                        config=config)
@@ -1232,6 +1234,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed(
             'faint orbit extend hope moon head mercy still debate sick cotton path',
@@ -1997,6 +2001,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed('mix total present junior leader live state athlete mistake crack wall valve',
                                                        config=config)
