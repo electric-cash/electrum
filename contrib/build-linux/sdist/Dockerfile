@@ -15,3 +15,5 @@ RUN apt-get update -q && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y && \
     apt-get clean
+
+RUN git config --global --add safe.directory '*'

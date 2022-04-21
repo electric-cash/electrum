@@ -13,8 +13,13 @@ if [ ! -d "$PACKAGES" ]; then
   exit 1
 fi
 
-git submodule update --init
+echo "Add all directories as safe for git"
+git config --global --add safe.directory '*'
+git config --global --add safe.directory /opt/electrum
+git config --global --add safe.directory /opt/electrum/electrum/www
 
+echo "Update submodules"
+git submodule update --init
 
 (
     cd "$ROOT_FOLDER"
