@@ -175,7 +175,11 @@ class HistoryNode(CustomNode):
                                 "The currently connected server does not know about it.\n"
                                 "You can either broadcast it now, or simply remove it.")
                     else:
-                        msg = str(conf) + _(" confirmation" + ("s" if conf != 1 else ""))
+                        if conf != 1:
+                            confstr = _(" confirmations")
+                        else:
+                            confstr = _(" confirmation")
+                        msg = str(conf) + confstr
                 return QVariant(msg)
             elif col > HistoryColumns.DESCRIPTION and role == Qt.TextAlignmentRole:
                 return QVariant(int(Qt.AlignRight | Qt.AlignVCenter))
