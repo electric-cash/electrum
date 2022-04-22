@@ -9,9 +9,9 @@ LIBUSB_REPO="https://github.com/libusb/libusb.git"
 LIBUSB_COMMIT="c6a35c56016ea2ab2f19115d2ea1e85e0edae155"
 # ^ tag v1.0.24
 
-PYINSTALLER_REPO="https://github.com/SomberNight/pyinstaller.git"
-PYINSTALLER_COMMIT="31fda9dc83feb1b3f2ff08c89ff7ae61506fc1ca"
-# ^ tag 4.1, plus a custom commit that fixes cross-compilation with MinGW
+PYINSTALLER_REPO="https://github.com/pyinstaller/pyinstaller.git"
+PYINSTALLER_COMMIT="63438b1842eacd7f081fc53f1f5212bc20b7d02e"
+# ^ latest commit from "v4" branch, somewhat after "4.10" tag
 
 PYTHON_VERSION=3.7.9
 
@@ -128,11 +128,7 @@ info "Building PyInstaller."
     pushd bootloader
     # cross-compile to Windows using host python
     python3 ./waf all CC="${GCC_TRIPLET_HOST}-gcc" \
-                      CFLAGS="-static \
-                              -Wno-dangling-else \
-                              -Wno-error=unused-value \
-                              -Wno-error=implicit-function-declaration \
-                              -Wno-error=int-to-pointer-cast"
+                      CFLAGS="-static"
     popd
     # sanity check bootloader is there:
     if [ "$GCC_TRIPLET_HOST" = "i686-w64-mingw32" ] ; then
