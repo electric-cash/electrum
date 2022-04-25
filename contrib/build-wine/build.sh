@@ -18,8 +18,8 @@ export GCC_STRIP_BINARIES="1"
 . "$CONTRIB"/build_tools_util.sh
 
 info "Clearing $here/build and $here/dist..."
-sudo rm "$here"/build/* -rf
-sudo rm "$here"/dist/* -rf
+rm "$here"/build/* -rf
+rm "$here"/dist/* -rf
 
 mkdir -p "$CACHEDIR" "$PIP_CACHE_DIR"
 

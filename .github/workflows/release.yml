@@ -24,7 +24,7 @@ jobs:
       - name: Compile Linux tarball
         run: |
           echo "Building sdist at $PWD"
-          docker run --name electrum-sdist-builder-cont -v $PWD:/opt/electrum --rm --workdir /opt/electrum/contrib/build-linux/sdist electrum-sdist-builder-img ./build.sh
+          docker run --name electrum-sdist-builder-cont --user user -v $PWD:/opt/electrum --rm --workdir /opt/electrum/contrib/build-linux/sdist electrum-sdist-builder-img ./build.sh
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v2
         with:
