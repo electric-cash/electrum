@@ -135,13 +135,13 @@ info "Building PyInstaller."
                               -Wno-error=int-to-pointer-cast"
     popd
     # sanity check bootloader is there:
-    if [ "$GCC_TRIPLET_HOST" = "i686-w64-mingw32" ] ; then
-        [[ -e PyInstaller/bootloader/Windows-32bit/runw.exe ]] || fail "Could not find runw.exe in target dir! (32bit)"
-    elif [ "$GCC_TRIPLET_HOST" = "x86_64-w64-mingw32" ] ; then
-        [[ -e PyInstaller/bootloader/Windows-64bit/runw.exe ]] || fail "Could not find runw.exe in target dir! (64bit)"
-    else
-        fail "unexpected GCC_TRIPLET_HOST: $GCC_TRIPLET_HOST"
-    fi
+#    if [ "$GCC_TRIPLET_HOST" = "i686-w64-mingw32" ] ; then
+#        [[ -e PyInstaller/bootloader/Windows-32bit/runw.exe ]] || fail "Could not find runw.exe in target dir! (32bit)"
+#    elif [ "$GCC_TRIPLET_HOST" = "x86_64-w64-mingw32" ] ; then
+#        [[ -e PyInstaller/bootloader/Windows-64bit/runw.exe ]] || fail "Could not find runw.exe in target dir! (64bit)"
+#    else
+#        fail "unexpected GCC_TRIPLET_HOST: $GCC_TRIPLET_HOST"
+#    fi
 ) || fail "PyInstaller build failed"
 info "Installing PyInstaller."
 $PYTHON -m pip install --no-dependencies --no-warn-script-location ./pyinstaller
