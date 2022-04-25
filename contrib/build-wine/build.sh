@@ -20,12 +20,6 @@ if [ ! -z "$ELECBUILD_NOCACHE" ] ; then
     DOCKER_BUILD_FLAGS="--pull --no-cache"
 fi
 
-info "building docker image."
-docker build \
-    $DOCKER_BUILD_FLAGS \
-    -t electrum-wine-builder-img \
-    "$CONTRIB_WINE"
-
 # maybe do fresh clone
 if [ ! -z "$ELECBUILD_COMMIT" ] ; then
     info "ELECBUILD_COMMIT=$ELECBUILD_COMMIT. doing fresh clone and git checkout."
