@@ -403,6 +403,11 @@ class Interface(Logger):
         can be established. Returns False if the server has a self-signed
         certificate but otherwise is okay. Any other failures raise.
         """
+
+        # bypass this check for development on 127.0.0.1
+        if self.host == "127.0.0.1":
+            sslc = True
+
         try:
             await self.open_session(ca_ssl_context, exit_early=True)
         except ConnectError as e:
@@ -597,6 +602,8 @@ class Interface(Logger):
 
     async def open_session(self, sslc, exit_early=False):
         session_factory = lambda *args, iface=self, **kwargs: NotificationSession(*args, **kwargs, interface=iface)
+        if self.host == "127.0.0.1":
+            sslc = False
         async with _RSClient(session_factory=session_factory,
                              host=self.host, port=self.port,
                              ssl=sslc, proxy=self.proxy) as session:

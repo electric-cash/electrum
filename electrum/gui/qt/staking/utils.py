@@ -12,14 +12,19 @@ if TYPE_CHECKING:
 
 _logger = get_logger(__name__)
 
+from PyQt5.QtWidgets import QMessageBox
 
 def broadcast_transaction(network: 'Network', tx: 'Transaction'):
     try:
         network.run_from_another_thread(network.broadcast_transaction(tx))
     except TxBroadcastError as e:
-        _logger.error(f'Broadcasting transaction to network failed. {e}; txid: {tx.txid()}')
+        msg = f'Broadcasting transaction to network failed. {e}; txid: {tx.txid()}'
+        _logger.error(msg)
+        QMessageBox.critical(None, "Broadcasting Error",msg)
     except BestEffortRequestFailed as e:
-        _logger.error(f'No network found. {e}; txid: {tx.txid()}')
+        msg = f'No network found. {e}; txid: {tx.txid()}'
+        _logger.error(msg)
+        QMessageBox.critical(None, "Best Effort Request Failed",msg)
 
 
 def get_data_for_available_rewards_tab(wallet: Abstract_Wallet):

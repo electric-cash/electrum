@@ -83,13 +83,16 @@ class TxEditor:
         return None
 
     def get_free_tx_limit(self):
-        free_tx_limit = self.wallet.network.run_from_another_thread(
-                        self.wallet.network.get_free_tx_info(
-                            address=self.wallet.get_staking_address()
+        try:
+            free_tx_limit = self.wallet.network.run_from_another_thread(
+                            self.wallet.network.get_free_tx_info(
+                                address=self.wallet.get_staking_address()
+                                )
                             )
-                        )
-        free_tx_limit = free_tx_limit['limit']
-        return free_tx_limit
+            free_tx_limit = free_tx_limit['limit']
+            return free_tx_limit
+        except:
+            return 0
 
     def update_tx(self, *, fallback_to_zero_fee: bool = False):
         fee_estimator = self.get_fee_estimator()
