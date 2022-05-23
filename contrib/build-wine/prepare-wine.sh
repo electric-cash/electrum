@@ -1,13 +1,12 @@
 #!/bin/bash
 
 # Please update these carefully, some versions won't work under Wine
-NSIS_FILENAME=nsis-3.08-setup.exe
-NSIS_URL=https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/$NSIS_FILENAME
-NSIS_SHA256=bbc76be36ecb2fc00d493c91befdaf71654226ad8a4fc4dc338458916bf224d0
+NSIS_FILENAME=nsis-3.05-setup.exe
+NSIS_URL=https://downloads.sourceforge.net/project/nsis/NSIS%203/3.05/$NSIS_FILENAME
+NSIS_SHA256=1a3cc9401667547b9b9327a177b13485f7c59c2303d4b6183e7bc9e6c8d6bfdb
 
-PYINSTALLER_REPO="https://github.com/pyinstaller/pyinstaller.git"
-PYINSTALLER_COMMIT="0fe956a2c6157e1b276819de1a050c242de70a29"
-# ^ latest commit from "v4" branch, somewhat after "4.10" tag
+PYINSTALLER_REPO="https://github.com/SomberNight/pyinstaller.git"
+PYINSTALLER_COMMIT="31fda9dc83feb1b3f2ff08c89ff7ae61506fc1ca"
 
 PYTHON_VERSION=3.9.11
 

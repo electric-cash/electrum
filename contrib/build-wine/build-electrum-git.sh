@@ -1,12 +1,20 @@
 #!/bin/bash
 
-NAME_ROOT=electrum
+NAME_ROOT=elcash-wallet
 
-export PYTHONDONTWRITEBYTECODE=1  # don't create __pycache__/ folders with .pyc files
+# These settings probably don't need any change
+export WINEPREFIX=/opt/wine64
+export WINEDEBUG=-all
+export PYTHONDONTWRITEBYTECODE=1
+
+PYHOME=c:/python3
+PYTHON="wine $PYHOME/python.exe -OO -B"
 
 
 # Let's begin!
 set -e
+
+here="$(dirname "$(readlink -e "$0")")"
 
 . "$CONTRIB"/build_tools_util.sh
 
@@ -18,37 +26,32 @@ info "Last commit: $VERSION"
 # Load electrum-locale for this release
 git submodule update --init
 
+cp -r ./electrum/locale ./contrib/deterministic-build/electrum-locale/
+
 pushd ./contrib/deterministic-build/electrum-locale
 if ! which msgfmt > /dev/null 2>&1; then
     fail "Please install gettext"
 fi
-# we want the binary to have only compiled (.mo) locale files; not source (.po) files
-rm -rf "$WINEPREFIX/drive_c/electrum/electrum/locale/"
-for i in ./locale/*; do
-    dir="$WINEPREFIX/drive_c/electrum/electrum/$i/LC_MESSAGES"
+for i in $(find ./locale -maxdepth 1 -mindepth 1 -type d -printf '%f\n'); do
+    dir=$WINEPREFIX/drive_c/electrum/electrum/$i/LC_MESSAGES
     mkdir -p $dir
-    msgfmt --output-file="$dir/electrum.mo" "$i/electrum.po" || true
+    msgfmt --output-file=$dir/electrum.mo $i/electrum.po || true
 done
 popd
 
-find -exec touch -h -d '2000-11-11T11:11:11+00:00' {} +
+find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 
 
 # Install frozen dependencies
-$WINE_PYTHON -m pip install --no-build-isolation --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements.txt
+$PYTHON -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements.txt
 
-$WINE_PYTHON -m pip install --no-build-isolation --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements-binaries.txt
-
-$WINE_PYTHON -m pip install --no-build-isolation --no-dependencies --no-warn-script-location \
-    --cache-dir "$WINE_PIP_CACHE_DIR" -r "$CONTRIB"/deterministic-build/requirements-hw.txt
+$PYTHON -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements-hw.txt
 
 pushd $WINEPREFIX/drive_c/electrum
 # see https://github.com/pypa/pip/issues/2195 -- pip makes a copy of the entire directory
 info "Pip installing Electrum. This might take a long time if the project folder is large."
-$WINE_PYTHON -m pip install --no-build-isolation --no-dependencies --no-warn-script-location .
+$PYTHON -m pip install --no-dependencies --no-warn-script-location .
 popd
 
 
@@ -56,11 +59,11 @@ rm -rf dist/
 
 # build standalone and portable versions
 info "Running pyinstaller..."
-wine "$WINE_PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
+wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
 
 # set timestamps in dist, in order to make the installer reproducible
 pushd dist
-find -exec touch -h -d '2000-11-11T11:11:11+00:00' {} +
+find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 
 info "building NSIS installer"
@@ -68,7 +71,7 @@ info "building NSIS installer"
 wine "$WINEPREFIX/drive_c/Program Files (x86)/NSIS/makensis.exe" /DPRODUCT_VERSION=$VERSION electrum.nsi
 
 cd dist
-mv electrum-setup.exe $NAME_ROOT-$VERSION-setup.exe
+mv elcash-wallet-setup.exe $NAME_ROOT-$VERSION-setup.exe
 cd ..
 
 info "Padding binaries to 8-byte boundaries, and fixing COFF image checksum in PE header"
@@ -86,11 +89,9 @@ with open(pe_file, "rb") as f:
 pe_offset = int.from_bytes(binary[0x3c:0x3c+4], byteorder="little")
 checksum_offset = pe_offset + 88
 checksum = 0
-
 # Pad data to 8-byte boundary.
 remainder = len(binary) % 8
 binary += bytes(8 - remainder)
-
 for i in range(len(binary) // 4):
     if i == checksum_offset // 4:  # Skip the checksum field
         continue
@@ -98,19 +99,16 @@ for i in range(len(binary) // 4):
     checksum = (checksum & 0xffffffff) + dword + (checksum >> 32)
     if checksum > 2 ** 32:
         checksum = (checksum & 0xffffffff) + (checksum >> 32)
-
 checksum = (checksum & 0xffff) + (checksum >> 16)
 checksum = (checksum) + (checksum >> 16)
 checksum = checksum & 0xffff
 checksum += len(binary)
-
 # Set the checksum
 binary[checksum_offset : checksum_offset + 4] = int.to_bytes(checksum, byteorder="little", length=4)
-
 with open(pe_file, "wb") as f:
     f.write(binary)
 EOF
     done
 )
 
-sha256sum dist/electrum*.exe
+sha256sum dist/elcash-wallet*.exe
