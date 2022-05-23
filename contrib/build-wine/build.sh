@@ -15,7 +15,7 @@ export GCC_TRIPLET_HOST="i686-w64-mingw32"  # make sure to clear caches if chang
 export GCC_TRIPLET_BUILD="x86_64-pc-linux-gnu"
 export GCC_STRIP_BINARIES="1"
 export WIN_ARCH="win64"
-export WINEDEBUG=-all
+export WINEDEBUG="-all"
 
 . "$CONTRIB"/build_tools_util.sh
 
