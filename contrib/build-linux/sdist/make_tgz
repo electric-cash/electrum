@@ -1,6 +1,8 @@
 #!/bin/bash
 
 git config --global --add safe.directory /opt/electrum
+git config --global --add safe.directory /opt/electrum/electrum/www
+
 
 set -e
 
