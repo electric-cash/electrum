@@ -11,6 +11,7 @@ PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
 git config --global --add safe.directory $WINEPREFIX/drive_c/electrum
+git config --global --add safe.directory $WINEPREFIX/drive_c/electrum/electrum/www
 
 # Let's begin!
 set -e
