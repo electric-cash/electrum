@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME_ROOT=elcash-wallet
+export NAME_ROOT=elcash-wallet
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
@@ -22,7 +22,7 @@ here="$(dirname "$(readlink -e "$0")")"
 
 pushd $WINEPREFIX/drive_c/electrum
 
-VERSION=`git describe --tags --dirty --always`
+export VERSION=`git describe --tags --dirty --always`
 info "Last commit: $VERSION"
 
 # Load electrum-locale for this release
