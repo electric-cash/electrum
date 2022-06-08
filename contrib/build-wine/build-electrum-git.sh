@@ -10,6 +10,7 @@ export PYTHONDONTWRITEBYTECODE=1
 PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
+git config --global --add safe.directory $WINEPREFIX/drive_c/electrum
 
 # Let's begin!
 set -e
