@@ -28,6 +28,7 @@ RESULT=$(xcrun altool --notarize-app --type osx \
   --primary-bundle-id org.electrum.electrum \
   --username $APPLE_ID_USER \
   --password @env:APPLE_ID_PASSWORD \
+  --asc-provider @env:APPLE_ID_PROVIDER_SHORT_NAME \
   --output-format xml)
 
 if [ $? -ne 0 ]; then
