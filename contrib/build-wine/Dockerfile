@@ -36,29 +36,11 @@ RUN wget -nc https://dl.winehq.org/wine-builds/Release.key && \
     apt-add-repository https://dl.winehq.org/wine-builds/ubuntu/ && \
     apt-get update -q && \
     apt-get install -qy \
-<<<<<<< HEAD
-<<<<<<< HEAD
-        wine-stable-amd64:amd64=7.0.0.0~focal-1 \
-        wine-stable-i386:i386=7.0.0.0~focal-1 \
-        wine-stable:amd64=7.0.0.0~focal-1 \
-        winehq-stable:amd64=7.0.0.0~focal-1 \
-        && \
-    rm -rf /var/lib/apt/lists/* && \
-=======
         wine-stable-amd64:amd64 \
         wine-stable-i386:i386 \
         wine-stable:amd64 \
         winehq-stable:amd64
 
 RUN rm -rf /var/lib/apt/lists/* && \
->>>>>>> develop
-=======
-        wine-stable-amd64:amd64=4.0.3~bionic \
-        wine-stable-i386:i386=4.0.3~bionic \
-        wine-stable:amd64=4.0.3~bionic \
-        winehq-stable:amd64=4.0.3~bionic
-
-RUN rm -rf /var/lib/apt/lists/* && \
->>>>>>> parent of d31367eba... Update wine build
     apt-get autoremove -y && \
     apt-get clean

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME_ROOT=elcash-wallet
+export NAME_ROOT=elcash-wallet
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
@@ -61,7 +61,7 @@ rm -rf dist/
 
 # build standalone and portable versions
 info "Running pyinstaller..."
-wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
+wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean deterministic.spec
 
 # set timestamps in dist, in order to make the installer reproducible
 pushd dist

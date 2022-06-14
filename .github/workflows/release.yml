@@ -9,8 +9,6 @@ jobs:
   tarball:
     runs-on: ubuntu-latest
     steps:
-      - name: work around permission issue
-        run: git config --global --add safe.directory '*'
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
