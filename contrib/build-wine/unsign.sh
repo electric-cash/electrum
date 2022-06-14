@@ -21,23 +21,16 @@ echo "Found $(ls dist/*.exe | wc -w) files to verify."
 for mine in $(ls dist/*.exe); do
     echo "---------------"
     f=$(basename $mine)
-    if test -f signed/$f; then
-        echo "Found file at signed/$f"
-    else
-        echo "Downloading https://download.electrum.org/$version/$f"
-        wget -q https://download.electrum.org/$version/$f -O signed/$f
-    fi
+    echo "Downloading https://download.electrum.org/$version/$f"
+    wget -q https://download.electrum.org/$version/$f -O signed/$f
     out="signed/stripped/$f"
     # Remove PE signature from signed binary
     osslsigncode remove-signature -in signed/$f -out $out > /dev/null 2>&1
     chmod +x $out
     if cmp -s $out $mine; then
-        echo "Success: $f"
-        #gpg --sign --armor --detach signed/$f
+	echo "Success: $f"
+	gpg --sign --armor --detach signed/$f
     else
-        echo "Failure: $f"
-        exit 1
+	echo "Failure: $f"
     fi
 done
-
-exit 0

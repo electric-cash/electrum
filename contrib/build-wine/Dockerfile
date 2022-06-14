@@ -1,7 +1,6 @@
-FROM ubuntu:20.04@sha256:c95a8e48bf88e9849f3e0f723d9f49fa12c5a00cfc6e60d2bc99d87555295e4c
+FROM ubuntu:18.04@sha256:b58746c8a89938b8c9f5b77de3b8cf1fe78210c696ab03a1442e235eea65d84f
 
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-ENV DEBIAN_FRONTEND=noninteractive
 
 RUN dpkg --add-architecture i386 && \
     apt-get update -q && \
@@ -38,6 +37,7 @@ RUN wget -nc https://dl.winehq.org/wine-builds/Release.key && \
     apt-get update -q && \
     apt-get install -qy \
 <<<<<<< HEAD
+<<<<<<< HEAD
         wine-stable-amd64:amd64=7.0.0.0~focal-1 \
         wine-stable-i386:i386=7.0.0.0~focal-1 \
         wine-stable:amd64=7.0.0.0~focal-1 \
@@ -52,20 +52,13 @@ RUN wget -nc https://dl.winehq.org/wine-builds/Release.key && \
 
 RUN rm -rf /var/lib/apt/lists/* && \
 >>>>>>> develop
+=======
+        wine-stable-amd64:amd64=4.0.3~bionic \
+        wine-stable-i386:i386=4.0.3~bionic \
+        wine-stable:amd64=4.0.3~bionic \
+        winehq-stable:amd64=4.0.3~bionic
+
+RUN rm -rf /var/lib/apt/lists/* && \
+>>>>>>> parent of d31367eba... Update wine build
     apt-get autoremove -y && \
     apt-get clean
-
-# create new user to avoid using root; but with sudo access and no password for convenience.
-ENV USER="user"
-ENV HOME_DIR="/home/${USER}"
-ENV WORK_DIR="${HOME_DIR}/wspace" \
-    PATH="${HOME_DIR}/.local/bin:${PATH}"
-RUN useradd --create-home --shell /bin/bash ${USER}
-RUN usermod -append --groups sudo ${USER}
-RUN echo "%sudo ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-WORKDIR ${WORK_DIR}
-RUN chown --recursive ${USER} ${WORK_DIR}
-RUN chown ${USER} /opt
-USER ${USER}
-
-RUN mkdir --parents "/opt/wine64/drive_c/electrum"
