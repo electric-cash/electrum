@@ -7,7 +7,7 @@ on:
       - synchronize
 
 jobs:
-  windows:
+  windows: 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
