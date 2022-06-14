@@ -380,6 +380,9 @@ class Interface(Logger):
             self.network.taskgroup.spawn(self.run()), self.network.asyncio_loop)
         self.taskgroup = SilentTaskGroup()
 
+    def __repr__(self) -> str:
+        return f"{self.network.connection_status} {self.server._net_addr_str} {self.network.config.path}"
+
     @property
     def host(self):
         return self.server.host

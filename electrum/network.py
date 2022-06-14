@@ -344,6 +344,9 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
             self.local_watchtower.start_network(self)
             asyncio.ensure_future(self.local_watchtower.start_watching())
 
+    def __repr__(self) -> str:
+        return f"{self.interface.__repr__()}"
+
     def has_internet_connection(self) -> bool:
         """Our guess whether the device has Internet-connectivity."""
         return self._has_ever_managed_to_connect_to_server
