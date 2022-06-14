@@ -6,6 +6,15 @@ on:
       - opened
       - synchronize
 
+env:
+  BUILD_CERTIFICATE_BASE64: ${{ secrets.OSX_BUILD_CERTIFICATE_BASE64 }}
+  P12_PASSWORD: ${{ secrets.OSX_P12_PASSWORD }}
+  KEYCHAIN_PASSWORD: ${{ secrets.OSX_KEYCHAIN_PASSWORD }}
+  CODESIGN_CERT: ${{ secrets.OSX_CODESIGN_CERT }}
+  APPLE_ID_USER: ${{ secrets.OSX_APPLE_ID_USER }}
+  APPLE_ID_PASSWORD: ${{ secrets.OSX_APPLE_ID_PASSWORD }}
+  APPLE_ID_PROVIDER_SHORT_NAME: ${{ secrets.OSX_APPLE_ID_PROVIDER_SHORT_NAME }}
+
 jobs:
   windows: 
     runs-on: ubuntu-latest
