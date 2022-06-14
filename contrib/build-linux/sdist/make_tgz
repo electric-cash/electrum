@@ -1,5 +1,9 @@
 #!/bin/bash
 
+git config --global --add safe.directory /opt/electrum
+git config --global --add safe.directory /opt/electrum/electrum/www
+
+
 set -e
 
 CONTRIB_SDIST="$(dirname "$(readlink -e "$0")")"

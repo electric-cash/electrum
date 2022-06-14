@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME_ROOT=elcash-wallet
+export NAME_ROOT=elcash-wallet
 
 # These settings probably don't need any change
 export WINEPREFIX=/opt/wine64
@@ -10,6 +10,8 @@ export PYTHONDONTWRITEBYTECODE=1
 PYHOME=c:/python3
 PYTHON="wine $PYHOME/python.exe -OO -B"
 
+git config --global --add safe.directory $WINEPREFIX/drive_c/electrum
+git config --global --add safe.directory $WINEPREFIX/drive_c/electrum/electrum/www
 
 # Let's begin!
 set -e
@@ -20,7 +22,7 @@ here="$(dirname "$(readlink -e "$0")")"
 
 pushd $WINEPREFIX/drive_c/electrum
 
-VERSION=`git describe --tags --dirty --always`
+export VERSION=`git describe --tags --dirty --always`
 info "Last commit: $VERSION"
 
 # Load electrum-locale for this release
@@ -59,7 +61,7 @@ rm -rf dist/
 
 # build standalone and portable versions
 info "Running pyinstaller..."
-wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean --name $NAME_ROOT-$VERSION -w deterministic.spec
+wine "$PYHOME/scripts/pyinstaller.exe" --noconfirm --ascii --clean deterministic.spec
 
 # set timestamps in dist, in order to make the installer reproducible
 pushd dist
