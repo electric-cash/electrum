@@ -13,7 +13,6 @@ idna
 libusb1
 mnemonic
 noiseprotocol
-pip
 protobuf
 pyaes
 pycparser
