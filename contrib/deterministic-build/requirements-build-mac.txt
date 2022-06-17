@@ -7,3 +7,4 @@ pyinstaller
 setuptools
 typing-extensions
 wheel
+zipp
