@@ -262,8 +262,8 @@ python-socks==2.0.3 \
 QDarkStyle==3.0.3 \
     --hash=sha256:936d2d35b552f429803a985dbc17fc879a2f966faa9fbf8983896ccfa33e68f6 \
     --hash=sha256:ebccb129275dba637a112f0b7fa1040ea51e95938eb332a9f653d963c63aa915
-qrcode==7.3.1 \
-    --hash=sha256:375a6ff240ca9bd41adc070428b5dfc1dcfbb0f2507f1ac848f6cded38956578
+# qrcode==7.3.1 \
+#     --hash=sha256:375a6ff240ca9bd41adc070428b5dfc1dcfbb0f2507f1ac848f6cded38956578
 QtPy==2.0.1 \
     --hash=sha256:adfd073ffbd2de81dc7aaa0b983499ef5c59c96adcfdcc9dea60d42ca885eb8f \
     --hash=sha256:d93f2c98e97387fcc9d623d509772af5b6c15ab9d8f9f4c5dfbad9a73ad34812
