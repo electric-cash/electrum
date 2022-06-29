@@ -139,7 +139,7 @@ PYINSTALLER_COMMIT="40c9abce2d8de879e414fd377c933dccaab1e156"
     rm pyinstaller.py  # workaround for https://github.com/pyinstaller/pyinstaller/pull/6701
 ) || fail "PyInstaller build failed"
 info "Installing PyInstaller."
-python3 -m pip install --no-build-isolation --no-dependencies --no-warn-script-location "$CACHEDIR/pyinstaller"
+python3 -m pip install pyinstaller #--no-build-isolation --no-dependencies --no-warn-script-location "$CACHEDIR/pyinstaller"
 
 info "Using these versions for building $PACKAGE:"
 sw_vers
