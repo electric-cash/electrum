@@ -14,6 +14,7 @@ from electrum.wallet import sweep, Multisig_Wallet, Standard_Wallet, Imported_Wa
 from electrum.util import bfh, bh2u, create_and_start_event_loop
 from electrum.transaction import TxOutput, Transaction, PartialTransaction, PartialTxOutput, PartialTxInput, tx_from_any
 from electrum.mnemonic import seed_type
+from electrum.staking.transaction import TypeAwareTransaction
 
 from electrum.plugins.trustedcoin import trustedcoin
 
@@ -1171,6 +1172,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed('mix total present junior leader live state athlete mistake crack wall valve',
                                                        config=config)
@@ -1231,6 +1234,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed(
             'faint orbit extend hope moon head mercy still debate sick cotton path',
@@ -1996,6 +2001,8 @@ class TestWalletSending(TestCaseForTestnet):
                     def is_tip_stale(self):
                         return True
                 return BlockchainMock()
+            def notify(self, message):
+                pass
 
         wallet = self.create_standard_wallet_from_seed('mix total present junior leader live state athlete mistake crack wall valve',
                                                        config=config)
@@ -2842,7 +2849,7 @@ class TestWalletHistory_EvilGapLimit(TestCaseForTestnet):
         w = self.create_wallet()
         w.db.put('stored_height', 1316917 + 100)
         for txid in self.transactions:
-            tx = Transaction(self.transactions[txid])
+            tx = TypeAwareTransaction.from_tx(Transaction(self.transactions[txid]), w.db)
             w.add_transaction(tx)
         # txn A is an external incoming txn paying to addr (3) and (15)
         # txn B is an external incoming txn paying to addr (4) and (25)

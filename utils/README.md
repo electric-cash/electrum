@@ -66,7 +66,7 @@ where:
 
    EV supports following abbreviations:
    ```
-   en_UK,ko_KR,ja_JP,zh_CN,vi_VN,es_ES,pt_PT,id_ID,tr_TR
+   en_UK,ko_KR,ja_JP,zh_CN,vi_VN,es_ES,pt_PT,id_ID
    ```
 3. is [compiling](#compile-po-from-csv) csv file `CSV_2` into `po` and `mo` files
 
@@ -104,7 +104,7 @@ python make_locale.py create-csv --diff=../electrum/locale/es_ES/electrum.po tem
 ## Compile po from csv
 Below command compiles translated data from `csv` into corresponding `po` and `mo` files.
 
-|:warning: Warning: Csv file header has to contain proper language abbreviation, otherwise translations will be invisible. EV supports following language abbreviations `en_UK,ko_KR,ja_JP,zh_CN,vi_VN,es_ES,pt_PT,id_ID,tr_TR`|
+|:warning: Warning: Csv file header has to contain proper language abbreviation, otherwise translations will be invisible. EV supports following language abbreviations `en_UK,ko_KR,ja_JP,zh_CN,vi_VN,es_ES,pt_PT,id_ID`|
 |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 ```bash

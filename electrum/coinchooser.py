@@ -195,15 +195,15 @@ class CoinChooserBase(Logger):
             remaining -= amount
             n -= 1
 
-        # Last change output.  Round down to maximum precision but lose
-        # no more than 10**max_dp_to_round_for_privacy
-        # e.g. a max of 2 decimal places means losing 100 satoshis to fees
-        max_dp_to_round_for_privacy = 2 if self.enable_output_value_rounding else 0
-        N = int(pow(10, min(max_dp_to_round_for_privacy, zeroes[0])))
-        amount = (remaining // N) * N
-        amounts.append(amount)
+        # # Last change output.  Round down to maximum precision but lose
+        # # no more than 10**max_dp_to_round_for_privacy
+        # # e.g. a max of 2 decimal places means losing 100 satoshis to fees
+        # max_dp_to_round_for_privacy = 2 if self.enable_output_value_rounding else 0
+        # N = int(pow(10, min(max_dp_to_round_for_privacy, zeroes[0])))
+        # amount = (remaining // N) * N
+        amounts.append(remaining)
 
-        assert sum(amounts) <= change_amount
+        assert sum(amounts) == change_amount
 
         return amounts
 
@@ -227,7 +227,7 @@ class CoinChooserBase(Logger):
         # make a copy of base_tx so it won't get mutated
         tx = PartialTransaction.from_io(base_tx.inputs()[:], base_tx.outputs()[:])
 
-        tx.add_inputs([coin for b in buckets for coin in b.coins])
+        tx.add_unsorted_inputs([coin for b in buckets for coin in b.coins])
         tx_weight = self._get_tx_weight(buckets, base_weight=base_weight)
 
         # change is sent back to sending address unless specified
@@ -286,7 +286,7 @@ class CoinChooserBase(Logger):
         self.p = PRNG(b''.join(sorted(utxos)))
 
         # Copy the outputs so when adding change we don't modify "outputs"
-        base_tx = PartialTransaction.from_io(inputs[:], outputs[:])
+        base_tx = PartialTransaction.from_io(inputs[:], outputs[:], sort=False)
         input_value = base_tx.input_value()
 
         # Weight of the transaction with no inputs and no change

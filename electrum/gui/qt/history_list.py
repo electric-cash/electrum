@@ -76,6 +76,12 @@ TX_ICONS = [
     "clock4.png",
     "clock5.png",
     "confirmed.png",
+    "stake_deposit_confirmed.png",
+    "stake_deposit_unconfirmed.png",
+    "stake_claim_rewards_confirmed.png",
+    "stake_claim_rewards_unconfirmed.png",
+    "stake_withdrawal_confirmed.png",
+    "stake_withdrawal_unconfirmed.png",
 ]
 
 class HistoryColumns(IntEnum):
@@ -169,7 +175,11 @@ class HistoryNode(CustomNode):
                                 "The currently connected server does not know about it.\n"
                                 "You can either broadcast it now, or simply remove it.")
                     else:
-                        msg = str(conf) + _(" confirmation" + ("s" if conf != 1 else ""))
+                        if conf != 1:
+                            confstr = _(" confirmations")
+                        else:
+                            confstr = _(" confirmation")
+                        msg = str(conf) + confstr
                 return QVariant(msg)
             elif col > HistoryColumns.DESCRIPTION and role == Qt.TextAlignmentRole:
                 return QVariant(int(Qt.AlignRight | Qt.AlignVCenter))
@@ -224,15 +234,8 @@ class HistoryModel(CustomModel, Logger):
         CustomModel.__init__(self, parent, len(HistoryColumns))
         Logger.__init__(self)
         self.parent = parent
-        self.view = None  # type: HistoryList
         self.transactions = OrderedDictWithIndex()
         self.tx_status_cache = {}  # type: Dict[str, Tuple[int, str]]
-
-    def set_view(self, history_list: 'HistoryList'):
-        # FIXME HistoryModel and HistoryList mutually depend on each other.
-        # After constructing both, this method needs to be called.
-        self.view = history_list  # type: HistoryList
-        self.set_visibility_of_columns()
 
     def update_label(self, index):
         tx_item = index.internalPointer().get_data()
@@ -253,29 +256,25 @@ class HistoryModel(CustomModel, Logger):
     def refresh(self, reason: str):
         self.logger.info(f"refreshing... reason: {reason}")
         assert self.parent.gui_thread == threading.current_thread(), 'must be called from GUI thread'
-        assert self.view, 'view not set'
-        if self.view.maybe_defer_update():
-            return
-        selected = self.view.selectionModel().currentIndex()
-        selected_row = None
-        if selected:
-            selected_row = selected.row()
+
         fx = self.parent.fx
-        if fx: fx.history_used_spot = False
+        if fx:
+            fx.history_used_spot = False
         wallet = self.parent.wallet
-        self.set_visibility_of_columns()
         transactions = wallet.get_full_history(
             self.parent.fx,
             onchain_domain=self.get_domain(),
             include_lightning=self.should_include_lightning_payments())
         if transactions == self.transactions:
             return
+
         old_length = self._root.childCount()
         if old_length != 0:
             self.beginRemoveRows(QModelIndex(), 0, old_length)
             self.transactions.clear()
             self._root = HistoryNode(self, None)
             self.endRemoveRows()
+
         parents = {}
         for tx_item in transactions.values():
             node = HistoryNode(self, tx_item)
@@ -322,36 +321,12 @@ class HistoryModel(CustomModel, Logger):
         self.transactions = transactions
         self.endInsertRows()
 
-        if selected_row:
-            self.view.selectionModel().select(self.createIndex(selected_row, 0), QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
-        self.view.filter()
-        # update time filter
-        if not self.view.years and self.transactions:
-            start_date = date.today()
-            end_date = date.today()
-            if len(self.transactions) > 0:
-                start_date = self.transactions.value_from_pos(0).get('date') or start_date
-                end_date = self.transactions.value_from_pos(len(self.transactions) - 1).get('date') or end_date
-            self.view.years = [str(i) for i in range(start_date.year, end_date.year + 1)]
-            self.view.period_combo.insertItems(1, self.view.years)
         # update tx_status_cache
         self.tx_status_cache.clear()
         for txid, tx_item in self.transactions.items():
             if not tx_item.get('lightning', False):
                 tx_mined_info = self.tx_mined_info_from_tx_item(tx_item)
                 self.tx_status_cache[txid] = self.parent.wallet.get_tx_status(txid, tx_mined_info)
-
-    def set_visibility_of_columns(self):
-        def set_visible(col: int, b: bool):
-            self.view.showColumn(col) if b else self.view.hideColumn(col)
-        # txid
-        set_visible(HistoryColumns.TXID, False)
-        # fiat
-        history = self.parent.fx.show_history()
-        cap_gains = self.parent.fx.get_history_capital_gains_config()
-        set_visible(HistoryColumns.FIAT_VALUE, history)
-        set_visible(HistoryColumns.FIAT_ACQ_PRICE, history and cap_gains)
-        set_visible(HistoryColumns.FIAT_CAP_GAINS, history and cap_gains)
 
     def update_fiat(self, idx):
         tx_item = idx.internalPointer().get_data()
@@ -412,12 +387,6 @@ class HistoryModel(CustomModel, Logger):
             HistoryColumns.TXID: 'TXID',
         }[section]
 
-    def flags(self, idx):
-        extra_flags = Qt.NoItemFlags # type: Qt.ItemFlag
-        if idx.column() in self.view.editable_columns:
-            extra_flags |= Qt.ItemIsEditable
-        return super().flags(idx) | int(extra_flags)
-
     @staticmethod
     def tx_mined_info_from_tx_item(tx_item):
         tx_mined_info = TxMinedInfo(height=tx_item['height'],
@@ -467,11 +436,46 @@ class HistoryList(MyTreeView, AcceptFileDragDrop):
             sm = QHeaderView.Stretch if col == self.stretch_column else QHeaderView.ResizeToContents
             self.header().setSectionResizeMode(col, sm)
 
-    def update(self):
-        self.hm.refresh('HistoryList.update()')
+    def update(self, reason='HistoryList.update()'):
+        if self.maybe_defer_update():
+            return
+        selected = self.selectionModel().currentIndex()
+        selected_row = None
+        if selected:
+            selected_row = selected.row()
+        self.set_visibility_of_columns()
+
+        self.hm.refresh(reason)
+
+        if selected_row:
+            self.selectionModel().select(self.hm.createIndex(selected_row, 0), QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
+
+        # update time filter
+        if not self.years and self.hm.transactions:
+            start_date = date.today()
+            end_date = date.today()
+            if len(self.hm.transactions) > 0:
+                start_date = self.hm.transactions.value_from_pos(0).get('date') or start_date
+                end_date = self.hm.transactions.value_from_pos(len(self.hm.transactions) - 1).get('date') or end_date
+            self.years = [str(i) for i in range(start_date.year, end_date.year + 1)]
+            self.period_combo.insertItems(1, self.years)
+
+        self.filter()
 
     def format_date(self, d):
         return str(datetime.date(d.year, d.month, d.day)) if d else _('None')
+
+    def set_visibility_of_columns(self):
+        def set_visible(col: int, b: bool):
+            self.showColumn(col) if b else self.hideColumn(col)
+        # txid
+        set_visible(HistoryColumns.TXID, False)
+        # fiat
+        history = self.parent.fx.show_history()
+        cap_gains = self.parent.fx.get_history_capital_gains_config()
+        set_visible(HistoryColumns.FIAT_VALUE, history)
+        set_visible(HistoryColumns.FIAT_ACQ_PRICE, history and cap_gains)
+        set_visible(HistoryColumns.FIAT_CAP_GAINS, history and cap_gains)
 
     def on_combo(self, x):
         s = self.period_combo.itemText(x)
@@ -617,7 +621,7 @@ class HistoryList(MyTreeView, AcceptFileDragDrop):
         if not idx.isValid():
             return
         tx_item = self.tx_item_from_proxy_row(idx.row())
-        if self.hm.flags(self.model().mapToSource(idx)) & Qt.ItemIsEditable:
+        if self.model().mapToSource(idx).column() in self.editable_columns:
             super().mouseDoubleClickEvent(event)
         else:
             if tx_item.get('lightning'):
@@ -680,7 +684,8 @@ class HistoryList(MyTreeView, AcceptFileDragDrop):
         cc = self.add_copy_menu(menu, idx)
         cc.addAction(_("Transaction ID"), lambda: self.place_text_on_clipboard(tx_hash, title="TXID"))
         for c in self.editable_columns:
-            if self.isColumnHidden(c): continue
+            if self.isColumnHidden(c):
+                continue
             label = self.hm.headerData(c, Qt.Horizontal, Qt.DisplayRole)
             # TODO use siblingAtColumn when min Qt version is >=5.11
             persistent = QPersistentModelIndex(org_idx.sibling(org_idx.row(), c))
@@ -798,3 +803,5 @@ class HistoryList(MyTreeView, AcceptFileDragDrop):
         idx = self.model().mapToSource(self.model().index(row, col))
         tx_item = idx.internalPointer().get_data()
         return self.hm.data(idx, Qt.DisplayRole).value(), get_item_key(tx_item)
+
+

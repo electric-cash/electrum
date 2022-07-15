@@ -26,7 +26,8 @@
 from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, Union
 
-from PyQt5.QtWidgets import  QVBoxLayout, QLabel, QGridLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QVBoxLayout, QLabel, QGridLayout, QPushButton, QCheckBox
+from PyQt5.QtCore import Qt
 
 from electrum.i18n import _
 from electrum.util import NotEnoughFunds, NoDynamicFeeEstimates
@@ -44,7 +45,6 @@ if TYPE_CHECKING:
     from .main_window import ElectrumWindow
 
 
-
 class TxEditor:
 
     def __init__(self, *, window: 'ElectrumWindow', make_tx,
@@ -60,6 +60,8 @@ class TxEditor:
         self.needs_update = False
         self.password_required = self.wallet.has_keystore_encryption() and not is_sweep
         self.main_window.gui_object.timer.timeout.connect(self.timer_actions)
+        self.can_be_free = False
+        self.is_free = False
 
     def timer_actions(self):
         if self.needs_update:
@@ -80,10 +82,33 @@ class TxEditor:
     def get_fee_estimator(self):
         return None
 
+    def get_free_tx_limit(self):
+        try:
+            free_tx_limit = self.wallet.network.run_from_another_thread(
+                            self.wallet.network.get_free_tx_info(
+                                address=self.wallet.get_staking_address()
+                                )
+                            )
+            free_tx_limit = free_tx_limit['limit']
+            return free_tx_limit
+        except:
+            return 0
+
     def update_tx(self, *, fallback_to_zero_fee: bool = False):
         fee_estimator = self.get_fee_estimator()
         try:
-            self.tx = self.make_tx(fee_estimator)
+            if not self.is_free:
+                self.tx = self.make_tx(fee_estimator)
+            else:
+                self.tx = self.make_tx(0)
+
+            self.can_be_free = self.tx.estimated_size() <= self.get_free_tx_limit()
+
+            # when free tx is too big 
+            if not self.can_be_free and self.is_free:
+                self.is_free = False
+                self.tx = self.make_tx(fee_estimator)
+
             self.not_enough_funds = False
             self.no_dynfee_estimates = False
         except NotEnoughFunds:
@@ -120,8 +145,6 @@ class TxEditor:
             return True
 
 
-
-
 class ConfirmTxDialog(TxEditor, WindowModalDialog):
     # set fee and return password (after pw check)
 
@@ -151,9 +174,15 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         grid.addWidget(self.extra_fee_label, 2, 0)
         grid.addWidget(self.extra_fee_value, 2, 1)
 
+        self.size_label = QLabel(_("Transaction size") + ": ")
+        self.size_value = QLabel('')
+        grid.addWidget(self.size_label, 4, 0)
+        grid.addWidget(self.size_value, 4, 1)
+
         self.fee_slider = FeeSlider(self, self.config, self.fee_slider_callback)
         self.fee_combo = FeeComboBox(self.fee_slider)
-        grid.addWidget(HelpLabel(_("Fee rate") + ": ", self.fee_combo.help_msg), 5, 0)
+        self.fee_rate_label = HelpLabel(_("Fee rate") + ": ", self.fee_combo.help_msg)
+        grid.addWidget(self.fee_rate_label, 5, 0)
         grid.addWidget(self.fee_slider, 5, 1)
 
         self.message_label = QLabel(self.default_message())
@@ -167,10 +196,16 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         self.preview_button = QPushButton(_('Advanced'))
         self.preview_button.clicked.connect(self.on_preview)
         grid.addWidget(self.preview_button, 0, 2)
+
+        self.free_checkbox = QCheckBox(_('Send for free'))
+        self.free_checkbox.setVisible(True)
+        self.free_checkbox.setDisabled(True)
+        self.free_checkbox.stateChanged.connect(self.on_send_for_free_checkbox)
+
         self.send_button = QPushButton(_('Send'))
         self.send_button.clicked.connect(self.on_send)
         self.send_button.setDefault(True)
-        vbox.addLayout(Buttons(CancelButton(self), self.send_button))
+        vbox.addLayout(Buttons(self.free_checkbox, CancelButton(self), self.send_button))
         BlockingWaitingDialog(window, _("Preparing transaction..."), self.update_tx)
         self.update()
         self.is_send = False
@@ -210,6 +245,14 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         self.pw.setEnabled(enable)
         self.send_button.setEnabled(enable)
 
+    def on_send_for_free_checkbox(self, state):
+        if state == Qt.Checked:
+            self.is_free = True
+        else:
+            self.is_free = False
+
+        self.needs_update = True
+
     def _update_amount_label(self):
         tx = self.tx
         if self.output_value == '!':
@@ -224,8 +267,21 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         self.amount_label.setText(amount_str)
 
     def update(self):
+        self.free_checkbox.setDisabled(not self.can_be_free)
+        self.free_checkbox.setCheckState(Qt.Checked if self.is_free else Qt.Unchecked)
+
+        # Disabled when self.is_free
+        self.fee_rate_label.setDisabled(self.is_free)
+        self.preview_button.setDisabled(self.is_free)
+
+        # not Visible when self.is_free
+        self.fee_slider.setVisible(not self.is_free)
+
+
         tx = self.tx
         self._update_amount_label()
+
+        self.size_value.setText(str(tx.estimated_size()) + " Bytes")
 
         if self.not_enough_funds:
             text = self.main_window.get_text_not_enough_funds_mentioning_frozen()
@@ -247,7 +303,7 @@ class ConfirmTxDialog(TxEditor, WindowModalDialog):
         amount = tx.output_value() if self.output_value == '!' else self.output_value
         feerate = Decimal(fee) / tx.estimated_size()  # sat/byte
         fee_ratio = Decimal(fee) / amount if amount else 1
-        if feerate < self.wallet.relayfee() / 1000:
+        if feerate < self.wallet.relayfee() / 1000 and not self.is_free:
             msg = '\n'.join([
                 _("This transaction requires a higher fee, or it will not be propagated by your current server"),
                 _("Try to raise your transaction fee, or use a server with a lower relay fee.")

@@ -380,6 +380,9 @@ class Interface(Logger):
             self.network.taskgroup.spawn(self.run()), self.network.asyncio_loop)
         self.taskgroup = SilentTaskGroup()
 
+    def __repr__(self) -> str:
+        return f"{self.network.connection_status} {self.server._net_addr_str} {self.network.config.path}"
+
     @property
     def host(self):
         return self.server.host
@@ -403,6 +406,11 @@ class Interface(Logger):
         can be established. Returns False if the server has a self-signed
         certificate but otherwise is okay. Any other failures raise.
         """
+
+        # bypass this check for development on 127.0.0.1
+        if self.host == "127.0.0.1":
+            sslc = True
+
         try:
             await self.open_session(ca_ssl_context, exit_early=True)
         except ConnectError as e:
@@ -597,6 +605,8 @@ class Interface(Logger):
 
     async def open_session(self, sslc, exit_early=False):
         session_factory = lambda *args, iface=self, **kwargs: NotificationSession(*args, **kwargs, interface=iface)
+        if self.host == "127.0.0.1":
+            sslc = False
         async with _RSClient(session_factory=session_factory,
                              host=self.host, port=self.port,
                              ssl=sslc, proxy=self.proxy) as session:
@@ -1028,6 +1038,75 @@ class Interface(Logger):
         if res != -1:
             assert_non_negative_int_or_float(res)
             res = int(res * bitcoin.COIN)
+        return res
+
+    async def get_free_tx_info(self, address):
+        """
+        address: address where is any active stake
+        """
+        res = await self.session.send_request('blockchain.get_free_tx_info', [address])
+
+        # assert_dict_contains_field(res, field_name='test')
+
+        return res
+
+    async def get_govpower(self, address):
+        """
+        address: address where is any active stake
+        """
+        res = await self.session.send_request('blockchain.get_gov_power', [address])
+
+        # assert_dict_contains_field(res, field_name='test')
+
+        return res
+
+    async def get_free_tx_limit(self, index=0, amount=5):
+        """
+        index: range 0 - 3 (stake period index)
+        amount: stake amount
+        """
+        res = await self.session.send_request('blockchain.staking.calc_free_tx_limit', [index, amount])
+
+        # assert_dict_contains_field(res, field_name='test')
+
+        return res
+
+    async def get_staking_info(self):
+        """
+        """
+        res = await self.session.send_request('blockchain.staking.get_info')
+
+        assert_dict_contains_field(res, field_name='interestInfo')
+        assert_dict_contains_field(res, field_name='num_active_stakes')
+        assert_dict_contains_field(res, field_name='num_complete_stakes')
+        assert_dict_contains_field(res, field_name='num_early_withdrawn_stakes')
+        assert_dict_contains_field(res, field_name='num_staking_addresses')
+        assert_dict_contains_field(res, field_name='penalty')
+        assert_dict_contains_field(res, field_name='staking_pool')
+        assert_dict_contains_field(res, field_name='total_staked')
+
+        return res
+
+    async def get_stake(self, tx_hash, *, timeout=None):
+        """
+        """
+        if not is_hash256_str(tx_hash):
+            raise Exception(f"{repr(tx_hash)} is not a txid")
+        res = await self.session.send_request('blockchain.transaction.get_stake', [tx_hash], timeout=timeout)
+
+        assert_dict_contains_field(res, field_name='deposit_height')
+        assert_dict_contains_field(res, field_name='staking_period')
+        assert_dict_contains_field(res, field_name='staking_amount')
+        assert_dict_contains_field(res, field_name='accumulated_reward')
+        assert_dict_contains_field(res, field_name='fulfilled')
+        assert_dict_contains_field(res, field_name='paid_out')
+
+        return res
+
+    async def get_listunspent(self, scripthash):
+        """
+        """
+        res = await self.session.send_request('blockchain.scripthash.listunspent', [scripthash])
         return res
 
 

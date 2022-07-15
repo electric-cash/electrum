@@ -344,6 +344,9 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
             self.local_watchtower.start_network(self)
             asyncio.ensure_future(self.local_watchtower.start_watching())
 
+    def __repr__(self) -> str:
+        return f"{self.interface.__repr__()}"
+
     def has_internet_connection(self) -> bool:
         """Our guess whether the device has Internet-connectivity."""
         return self._has_ever_managed_to_connect_to_server
@@ -449,11 +452,15 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
         async def get_relay_fee():
             self.relay_fee = await interface.get_relay_fee()
 
+        async def get_staking_info():
+            self.staking_info = await interface.get_staking_info()
+
         async with TaskGroup() as group:
             await group.spawn(get_banner)
             await group.spawn(get_donation_address)
             await group.spawn(get_server_peers)
             await group.spawn(get_relay_fee)
+            await group.spawn(get_staking_info)
             await group.spawn(self._request_fee_estimates(interface))
 
     async def _request_fee_estimates(self, interface):
@@ -1007,7 +1014,8 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
             r"bad-txns-inputs-duplicate",
             r"bad-cb-length",
             r"bad-txns-prevout-null",
-            r"bad-txns-inputs-missingorspent",
+            r"bad-txns-inputs-missingorspent-1",
+            r"bad-txns-inputs-missingorspent-2",
             r"bad-txns-premature-spend-of-coinbase",
             r"bad-txns-inputvalues-outofrange",
             r"bad-txns-in-belowout",
@@ -1048,6 +1056,42 @@ class Network(Logger, NetworkRetryManager[ServerAddr]):
     @catch_server_exceptions
     async def get_txid_from_txpos(self, tx_height, tx_pos, merkle):
         return await self.interface.get_txid_from_txpos(tx_height, tx_pos, merkle)
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_stake(self, tx_hash: str, *, timeout=None) -> str:
+        return await self.interface.get_stake(tx_hash=tx_hash, timeout=timeout)
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_block_header(self, height, assert_mode):
+        data = await self.interface.get_block_header(height=height, assert_mode=assert_mode)
+        return data
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_staking_info(self):
+        data = await self.interface.get_staking_info()
+        return data
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_free_tx_info(self, address):
+        data = await self.interface.get_free_tx_info(address)
+        return data
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_govpower(self, address):
+        data = await self.interface.get_govpower(address)
+        return data
+
+    @best_effort_reliable
+    @catch_server_exceptions
+    async def get_free_tx_limit(self, index, amount):
+        data = await self.interface.get_free_tx_limit(index, amount)
+        return data
+
 
     def blockchain(self) -> Blockchain:
         interface = self.interface

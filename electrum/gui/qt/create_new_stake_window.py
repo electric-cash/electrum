@@ -22,14 +22,18 @@
 # ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
+import random
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+from electrum.bitcoin import COIN
+from electrum.gui.qt.staking.utils import broadcast_transaction
 from electrum.gui.qt.util import WindowModalDialog, PasswordLineEdit
 from electrum.i18n import _
 from electrum.logging import get_logger
+from electrum.network import TxBroadcastError, BestEffortRequestFailed
 
 _logger = get_logger(__name__)
 
@@ -40,14 +44,17 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.value_change()
         self.open()
 
-    def __init__(self, parent, min_amount=5, default_period=30, default_amount=5):
+    def __init__(self, parent, main_window, min_amount=5, default_amount=5,):
 
         super().__init__(parent)
-        self.parent = parent
-        self.min_amount = min_amount
-        self.stake_value = 0
-        self.period_days = default_period
         self.default_amount = default_amount
+        self.noud_table = 0
+        self.parent = parent
+        self.main_window = main_window
+        self.min_amount = min_amount
+        self.staking_params = self.main_window.network.staking_info['interestInfo']
+        self.stake_value = 0
+        self.picked_period_in_blocks = int(list(self.staking_params.keys())[0])
         self.setEnabled(True)
         self.setMinimumSize(QtCore.QSize(440, 400))
         self.setMaximumSize(QtCore.QSize(440, 400))
@@ -66,6 +73,8 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.setup_description2()
         self.setup_next_cancel_buttons()
 
+        self.value_change()
+
     def setup_title(self):
         self.title = QtWidgets.QLabel(self.verticalLayoutWidget)
         self.title.setText(_("Create New Stake"))
@@ -80,9 +89,7 @@ class CreateNewStakingWindow(WindowModalDialog):
 
     def setup_description(self):
         self.description_label = QtWidgets.QLabel(self.verticalLayoutWidget)
-        self.description_label.setText(
-            _("Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, "
-              "totam rem aperiam eaque ipsa, "))
+        self.description_label.setText(_(f"The minimum stake value is {self.min_amount} ELCASH"))
         self.description_label.setMinimumSize(QtCore.QSize(300, 0))
         self.description_label.setMaximumSize(QtCore.QSize(900, 60))
         self.description_label.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
@@ -102,51 +109,51 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.spinBox_amount.setDecimals(8)
         self.spinBox_amount.setRange(self.min_amount, self.get_spendable_coins())
         self.spinBox_amount.setValue(self.default_amount)
-        self.spinBox_amount.valueChanged.connect(self.value_change)
+        self.spinBox_amount.valueChanged.connect(self.value_change)  # set default value
 
         self.gridLayout.addWidget(self.spinBox_amount, 0, 1, 1, 4)
         self.amount_label.setText(_("Amount"))
         self.gridLayout.addWidget(self.amount_label, 0, 0, 1, 1)
 
-        self.amount_value_error_label.setText(_(f"The minimum stake value is {self.min_amount} ELCASH"))
+        self.amount_value_error_label.setText(_(f"Not enough coins in wallet"))
         self.amount_value_error_label.setStyleSheet('color: red')
         self.amount_value_error_label.hide()
 
-        if not self.valid_enough_coins(min_coins=self.min_amount):
+        if not self.valid_enough_coins(required_coins=self.min_amount):
             self.amount_value_error_label.show()
 
         self.gridLayout.addWidget(self.amount_value_error_label, 1, 0, 1, 5)
 
     def setup_radios(self):
-        self.radio30 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
-        self.radio90 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
-        self.radio180 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
-        self.radio360 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radio_0 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radio_1 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radio_2 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
+        self.radio_3 = QtWidgets.QRadioButton(self.verticalLayoutWidget)
 
-        self.radio30.setText(_("30 Days"))
-        if self.period_days == 30:
-            self.radio30.setChecked(True)
-        self.radio30.toggled.connect(lambda: self.radio_state(self.radio30))
-        self.radio30.toggled.connect(self.value_change)
-        self.gridLayout.addWidget(self.radio30, 3, 1, 1, 1)
-        self.radio90.setText(_("90 Days"))
-        if self.period_days == 90:
-            self.radio90.setChecked(True)
-        self.radio90.toggled.connect(lambda: self.radio_state(self.radio90))
-        self.radio90.toggled.connect(self.value_change)
-        self.gridLayout.addWidget(self.radio90, 3, 2, 1, 1)
-        self.radio180.setText(_("180 Days"))
-        if self.period_days == 180:
-            self.radio180.setChecked(True)
-        self.radio180.toggled.connect(lambda: self.radio_state(self.radio180))
-        self.radio180.toggled.connect(self.value_change)
-        self.gridLayout.addWidget(self.radio180, 3, 3, 1, 1)
-        self.radio360.setText(_("360 Days"))
-        if self.period_days == 360:
-            self.radio360.setChecked(True)
-        self.radio360.toggled.connect(lambda: self.radio_state(self.radio360))
-        self.radio360.toggled.connect(self.value_change)
-        self.gridLayout.addWidget(self.radio360, 3, 4, 1, 1)
+        blocks_period = int(list(self.staking_params.keys())[0])
+        self.radio_0.setText(_(f"{int(blocks_period / 144)} Days"))
+        self.radio_0.setChecked(True)
+        self.radio_0.toggled.connect(self.selected_radio_0)
+        self.radio_0.toggled.connect(self.value_change)
+        self.gridLayout.addWidget(self.radio_0, 3, 1, 1, 1)
+
+        blocks_period = int(list(self.staking_params.keys())[1])
+        self.radio_1.setText(_(f"{int(blocks_period / 144)} Days"))
+        self.radio_1.toggled.connect(self.selected_radio_1)
+        self.radio_1.toggled.connect(self.value_change)
+        self.gridLayout.addWidget(self.radio_1, 3, 2, 1, 1)
+
+        blocks_period = int(list(self.staking_params.keys())[2])
+        self.radio_2.setText(_(f"{int(blocks_period / 144)} Days"))
+        self.radio_2.toggled.connect(self.selected_radio_2)
+        self.radio_2.toggled.connect(self.value_change)
+        self.gridLayout.addWidget(self.radio_2, 3, 3, 1, 1)
+
+        blocks_period = int(list(self.staking_params.keys())[3])
+        self.radio_3.setText(_(f"{int(blocks_period / 144)} Days"))
+        self.radio_3.toggled.connect(self.selected_radio_3)
+        self.radio_3.toggled.connect(self.value_change)
+        self.gridLayout.addWidget(self.radio_3, 3, 4, 1, 1)
 
         self.Main_v_layout.addLayout(self.gridLayout)
 
@@ -162,23 +169,16 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.rewards_text_label.setText(_("Guaranteed rewards:"))
         self.rewards_text_label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.vl_rewards.addWidget(self.rewards_text_label)
-        self.gp_value_label.setText(
-            _("Governance Power: ") + str(self.spinBox_amount.value() * self.period_days * 0.008) + ' GP')
         self.gp_value_label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.vl_rewards.addWidget(self.gp_value_label)
-        self.free_trans_label.setText(
-            _("Daily free transactions limit:") + str(self.spinBox_amount.value() * self.period_days * 0.01) +
-            ' bytes')
         self.free_trans_label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.vl_rewards.addWidget(self.free_trans_label)
         spacer_item = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.vl_rewards.addItem(spacer_item)
-        self.pred_rew.setText(_("Predicted Rewords:"))
+        self.pred_rew.setText(_("Predicted Rewards:"))
         self.pred_rew.setMaximumSize(QtCore.QSize(16777215, 30))
         self.pred_rew.setBaseSize(QtCore.QSize(0, 30))
         self.vl_rewards.addWidget(self.pred_rew)
-        self.estimate_label.setText(
-            _("Estimated payout: ") + str(self.spinBox_amount.value() * self.period_days * 0.21) + ' ELCASH')
         self.estimate_label.setMaximumSize(QtCore.QSize(16777215, 20))
         self.vl_rewards.addWidget(self.estimate_label)
         self.Main_v_layout.addLayout(self.vl_rewards)
@@ -226,9 +226,29 @@ class CreateNewStakingWindow(WindowModalDialog):
         self.gridLayout_2.addLayout(self.horizontalLayout, 0, 5, 1, 2)
         self.Main_v_layout.addLayout(self.gridLayout_2)
 
+    def selected_radio_0(self, selected):
+        if selected:
+            self.picked_period_in_blocks = int(list(self.staking_params.keys())[0])
+            self.noud_table = 0
+
+    def selected_radio_1(self, selected):
+        if selected:
+            self.picked_period_in_blocks = int(list(self.staking_params.keys())[1])
+            self.noud_table = 1
+
+    def selected_radio_2(self, selected):
+        if selected:
+            self.picked_period_in_blocks = int(list(self.staking_params.keys())[2])
+            self.noud_table = 2
+
+    def selected_radio_3(self, selected):
+        if selected:
+            self.picked_period_in_blocks = int(list(self.staking_params.keys())[3])
+            self.noud_table = 3
+
     def on_push_next_button(self):
-        if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
-            self.dialog = dialog = CreateNewStakingTwo(parent=self)
+        if self.valid_enough_coins(required_coins=self.spinBox_amount.value()):
+            self.dialog = dialog = CreateNewStakingTwo(parent=self, main_window=self.main_window)
             dialog.show()
             self.hide()
 
@@ -238,49 +258,48 @@ class CreateNewStakingWindow(WindowModalDialog):
     def value_change(self):
         self.spinBox_amount.setRange(self.min_amount, self.get_spendable_coins())
 
-        if self.valid_enough_coins(min_coins=self.spinBox_amount.value()):
+        if self.valid_enough_coins(required_coins=self.spinBox_amount.value()):
             self.amount_value_error_label.hide()
             self.next_button.setEnabled(True)
         else:
             self.amount_value_error_label.show()
             self.next_button.setEnabled(False)
 
+        blocks_in_year = 144*360
+        staking_settings = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_staking_info()
+        )
+        percent_per_year = staking_settings['interestInfo'][str(self.picked_period_in_blocks)]
+        self.reward = self.spinBox_amount.value() * percent_per_year * self.picked_period_in_blocks / blocks_in_year
+        self.estimated_payout = self.spinBox_amount.value() + self.reward  # todo: fix it!
         self.estimate_label.setText(
-            _("Estimated payout: ") +
-            str(self.spinBox_amount.value() * self.period_days * 0.21) +
-            ' ELCASH')
+            _("Estimated payout: ") + str(f"{self.estimated_payout:0.8f}") + ' ELCASH'
+        )
+        amount=self.spinBox_amount.value()
+        index=int(list(self.staking_params.keys()).index(
+                    str(self.picked_period_in_blocks))
+                )
+        free_limit = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_free_tx_limit(
+                amount=amount,
+                index=index
+            )
+        )
 
         self.free_trans_label.setText(
-            _("Daily free transactions limit:") +
-            str(self.spinBox_amount.value() * self.period_days * 0.017) +
-            ' bytes')
+            _("Daily free transactions limit: ") + str(free_limit) + ' Bytes'
+        )
 
         self.gp_value_label.setText(
-            _("Governance Power: ") +
-            str(self.spinBox_amount.value() * self.period_days * 0.008) +
-            ' GP')
+            _("Governance Power: ") + str(f'{48*self.reward:0.8f}') + ' GP'
+        )
 
-    def get_period_blocks(self):
-        return self.period_days * 144
-
-    def radio_state(self, b):
-        if not b.isChecked():
-            return
-        elif b.text() == "30 Days":
-            self.period_days = 30
-        elif b.text() == "90 Days":
-            self.period_days = 90
-        elif b.text() == "180 Days":
-            self.period_days = 180
-        elif b.text() == "360 Days":
-            self.period_days = 360
-
-    def valid_enough_coins(self, min_coins):
-        return self.get_spendable_coins() >= min_coins
+    def valid_enough_coins(self, required_coins):
+        return self.get_spendable_coins() >= (required_coins * COIN)
 
     def get_spendable_coins(self):
-        coins = sum((i._trusted_value_sats for i in self.parent.wallet.get_spendable_coins(None, nonlocal_only=True)))
-        return coins * 0.00000001
+        coins = sum((i.value_sats() for i in self.main_window.wallet.get_spendable_coins(None, nonlocal_only=True)))
+        return coins
 
 
 class CreateNewStakingTwo(WindowModalDialog):
@@ -288,10 +307,11 @@ class CreateNewStakingTwo(WindowModalDialog):
     def __call__(self, *args, **kwargs):
         self.show()
 
-    def __init__(self, parent):
+    def __init__(self, parent, main_window):
         super().__init__(parent)
         self.parent = parent
-        self.wallet = parent.parent.wallet
+        self.wallet = main_window.wallet
+        self.main_window = main_window
         self.password_required = self.wallet.has_keystore_encryption()
         self.setWindowModality(QtCore.Qt.WindowModal)
         self.setEnabled(True)
@@ -355,13 +375,8 @@ class CreateNewStakingTwo(WindowModalDialog):
         self.main_box.addWidget(self.title)
 
     def setup_detail(self):
-        self.payout_label_2.setText(
-            str(self.parent.spinBox_amount.value() * self.parent.period_days * 0.021) +
-            ' ELCASH'
-        )
+        self.payout_label_2.setText(str(f"{self.parent.reward:0.8f}") + ' ELCASH')
         self.data_grid_box.addWidget(self.payout_label_2, 7, 1, 1, 1)
-        self.gp_label_2.setText(str(self.parent.spinBox_amount.value() * self.parent.period_days * 0.008) + ' GP')
-        self.data_grid_box.addWidget(self.gp_label_2, 4, 1, 1, 1)
         self.payout_label.setText(_("Estimated payout:"))
         self.data_grid_box.addWidget(self.payout_label, 7, 0, 1, 1)
         self.block_label.setText(_("Block required:"))
@@ -372,14 +387,24 @@ class CreateNewStakingTwo(WindowModalDialog):
         self.rewards_label.setFont(font)
         self.rewards_label.setText(_("Predicted rewards:"))
         self.data_grid_box.addWidget(self.rewards_label, 6, 0, 1, 1)
+
         self.gp_label.setText(_("Governance Power:"))
+        self.gp_label_2.setText(str(f"{48*self.parent.reward:0.8f}") + ' GP')
+        self.data_grid_box.addWidget(self.gp_label_2, 4, 1, 1, 1)
+
         self.data_grid_box.addWidget(self.gp_label, 4, 0, 1, 1)
         self.fee_label_2.setText(_("Daily free transactions limit:"))
         self.data_grid_box.addWidget(self.fee_label_2, 5, 0, 1, 1)
 
-        self.fee_label.setText(
-            str(self.parent.spinBox_amount.value() * self.parent.period_days * 0.017) +
-            ' bytes')
+        free_limit = self.main_window.wallet.network.run_from_another_thread(
+            self.main_window.wallet.network.get_free_tx_limit(
+                amount=self.parent.spinBox_amount.value(),
+                index=int(list(self.parent.staking_params.keys()).index(
+                    str(self.parent.picked_period_in_blocks))
+                )
+            )
+        )
+        self.fee_label.setText(str(free_limit) + ' bytes')
         self.data_grid_box.addWidget(self.fee_label, 5, 1, 1, 1)
         amount = self.parent.spinBox_amount.value()
         self.amount_label_2.setText(str(amount) + _(" Elcash"))
@@ -392,11 +417,13 @@ class CreateNewStakingTwo(WindowModalDialog):
     def setup_rewards(self):
         self.g_reward.setText(_("Guaranted rewards:"))
         self.data_grid_box.addWidget(self.g_reward, 3, 0, 1, 1)
-        self.block_label_2.setText(str(self.parent.get_period_blocks()))
+        blocks = self.parent.picked_period_in_blocks
+        self.block_label_2.setText(str(blocks))
         self.data_grid_box.addWidget(self.block_label_2, 2, 1, 1, 1)
         self.period_text_label.setText(_("Period:"))
         self.data_grid_box.addWidget(self.period_text_label, 1, 0, 1, 1)
-        self.period_label.setText(str(self.parent.period_days) + _(" days"))
+        a = int(self.parent.picked_period_in_blocks / 144)
+        self.period_label.setText(str(a) + _(" days"))
         self.data_grid_box.addWidget(self.period_label, 1, 1, 1, 1)
         self.amount_label.setText(_("Amount to be staked:"))
         self.data_grid_box.addWidget(self.amount_label, 0, 0, 1, 1)
@@ -480,9 +507,23 @@ class CreateNewStakingTwo(WindowModalDialog):
                 return
 
         self.is_send = True
-        self.hide()
-        dialog = CreateNewStakingFinish(parent=self)
-        dialog.show()
+
+        tx = self.wallet.make_unsigned_stake_deposit(
+            int(self.parent.spinBox_amount.value() * COIN),
+            self.parent.noud_table
+        )
+        if not tx:
+            _logger.warning('Stakin transaction could not be created')
+            # TODO: probably show some error message indicating that transaction could not be created? (no inputs found most likely)
+            return
+
+        tx = self.wallet.sign_transaction(tx, password)
+        broadcast_transaction(self.main_window.network, tx)
+
+        # success
+        finish_dialog = CreateNewStakingFinish(parent=self, transaction_id=tx.txid())
+        finish_dialog.finished.connect(self.close)
+        finish_dialog.show()
 
 
 class CreateNewStakingFinish(WindowModalDialog):
@@ -524,4 +565,3 @@ class CreateNewStakingFinish(WindowModalDialog):
 
     def on_push_ok_button(self):
         self.close()
-

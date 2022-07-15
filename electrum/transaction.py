@@ -54,6 +54,7 @@ from .logging import get_logger
 
 if TYPE_CHECKING:
     from .wallet import Abstract_Wallet
+    from .wallet_db import WalletDB
 
 
 _logger = get_logger(__name__)
@@ -141,6 +142,7 @@ class TxOutput:
         addr = self.address
         if addr is not None:
             return addr
+        # TODO: detect if scriptpubkey is staking and adjust response
         return f"SCRIPT {self.scriptpubkey.hex()}"
 
     def __repr__(self):
@@ -1131,6 +1133,9 @@ class PartialTxInput(TxInput, PSBTSection):
         self._is_p2sh_segwit = None  # type: Optional[bool]  # None means unknown
         self._is_native_segwit = None  # type: Optional[bool]  # None means unknown
 
+    def __repr__(self) -> str:
+        return f"Input {self._trusted_value_sats} {self._trusted_address}"
+
     @property
     def utxo(self):
         return self._utxo
@@ -1468,6 +1473,9 @@ class PartialTxOutput(TxOutput, PSBTSection):
         self.is_mine = False  # type: bool  # whether the wallet considers the output to be ismine
         self.is_change = False  # type: bool  # whether the wallet considers the output to be change
 
+    def __repr__(self) -> str:
+        return f"Output {self.value} {self.address}"
+
     def to_json(self):
         d = super().to_json()
         d.update({
@@ -1546,6 +1554,11 @@ class PartialTransaction(Transaction):
         self._outputs = []  # type: List[PartialTxOutput]
         self._unknown = {}  # type: Dict[bytes, bytes]
 
+    def __repr__(self) -> str:
+        inputs_value = sum([i._trusted_value_sats for i in self._inputs])
+        outputs_value = sum([out.value for out in self._outputs])
+        return f"Transaction in {inputs_value} - out {outputs_value} = {inputs_value-outputs_value} | ins {len(self._inputs)} outs {len(self._outputs)}"
+
     def to_json(self) -> dict:
         d = super().to_json()
         d.update({
@@ -1556,7 +1569,7 @@ class PartialTransaction(Transaction):
         return d
 
     @classmethod
-    def from_tx(cls, tx: Transaction) -> 'PartialTransaction':
+    def from_tx(cls, tx: Transaction, db: Optional['WalletDB'] = None) -> 'PartialTransaction':
         res = cls()
         res._inputs = [PartialTxInput.from_txin(txin, strip_witness=True)
                        for txin in tx.inputs()]
@@ -1598,7 +1611,7 @@ class PartialTransaction(Transaction):
                     for txin in unsigned_tx.inputs():
                         if txin.script_sig or txin.witness:
                             raise SerializationError(f"PSBT {repr(kt)} must have empty scriptSigs and witnesses")
-                    tx = PartialTransaction.from_tx(unsigned_tx)
+                    tx = PartialTransaction.from_tx(unsigned_tx, None)
 
         if tx is None:
             raise SerializationError(f"PSBT missing required global section PSBT_GLOBAL_UNSIGNED_TX")
@@ -1664,7 +1677,9 @@ class PartialTransaction(Transaction):
 
     @classmethod
     def from_io(cls, inputs: Sequence[PartialTxInput], outputs: Sequence[PartialTxOutput], *,
-                locktime: int = None, version: int = None):
+                locktime: int = None, version: int = None,
+                staking_reward: int = None, staking_penalty: int = None,
+                sort: bool = True):
         self = cls()
         self._inputs = list(inputs)
         self._outputs = list(outputs)
@@ -1672,7 +1687,12 @@ class PartialTransaction(Transaction):
             self.locktime = locktime
         if version is not None:
             self.version = version
-        self.BIP69_sort()
+        if staking_reward is not None:
+            self.staking_reward = staking_reward
+        if staking_penalty is not None:
+            self.staking_penalty = staking_penalty
+        if sort:
+            self.BIP69_sort()
         return self
 
     def _serialize_psbt(self, fd) -> None:
@@ -1750,6 +1770,10 @@ class PartialTransaction(Transaction):
         self.BIP69_sort(outputs=False)
         self.invalidate_ser_cache()
 
+    def add_unsorted_inputs(self, inputs: List[PartialTxInput]) -> None:
+        self._inputs.extend(inputs)
+        self.invalidate_ser_cache()
+
     def add_outputs(self, outputs: List[PartialTxOutput]) -> None:
         self._outputs.extend(outputs)
         self.BIP69_sort(inputs=False)
@@ -1780,7 +1804,12 @@ class PartialTransaction(Transaction):
 
     def get_fee(self) -> Optional[int]:
         try:
-            return self.input_value() - self.output_value()
+            staking_modifier = 0
+            if hasattr(self, 'staking_reward'):
+                staking_modifier = self.staking_reward
+            if hasattr(self, 'staking_penalty'):
+                staking_modifier = -self.staking_penalty
+            return self.input_value() - self.output_value() + staking_modifier
         except MissingTxInputAmount:
             return None
 
