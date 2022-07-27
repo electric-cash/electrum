@@ -67,7 +67,8 @@ idna==3.1 \
     --hash=sha256:c5b02147e01ea9920e6b0a3f1f7bb833612d507592c837a6c49552768f4054e1
 idna_ssl==1.1.0 \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c
-importlib-metadata
+importlib-metadata==4.12.0 \
+    --hash=sha256:a76b8ef5728273485261da4131a8b32c173c3ad18507f6140f052bd7dc09e3cc
 multidict==5.1.0 \
     --hash=sha256:018132dbd8688c7a69ad89c4a3f39ea2f9f33302ebe567a879da8f4ca73f0d0a \
     --hash=sha256:051012ccee979b2b06be928a6150d237aec75dd6bf2d1eeeb190baf2b05abc93 \
