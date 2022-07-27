@@ -93,6 +93,7 @@ python='appdir_python'
 
 info "installing pip."
 "$python" -m ensurepip
+"$python" -m pip install --upgrade pip
 
 break_legacy_easy_install
 
