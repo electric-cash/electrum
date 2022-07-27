@@ -93,7 +93,6 @@ python='appdir_python'
 
 info "installing pip."
 "$python" -m ensurepip
-"$python" -m pip install --upgrade pip
 
 break_legacy_easy_install
 
@@ -127,6 +126,7 @@ info "installing electrum and its dependencies."
 #       hence "--no-binary :all:" flags. However, we specifically allow
 #       - PyQt5, as it's harder to build from source
 #       - cryptography, as building it would need openssl 1.1, not available on ubuntu 16.04
+"$python" -m pip install importlib-metadata
 "$python" -m pip install --no-dependencies --no-binary :all: --no-warn-script-location \
     --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements.txt"
 "$python" -m pip install --no-dependencies --no-binary :all: --only-binary PyQt5,PyQt5-Qt5,cryptography --no-warn-script-location \
