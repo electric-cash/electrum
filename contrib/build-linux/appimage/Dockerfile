@@ -2,8 +2,13 @@ FROM ubuntu:20.04
 
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 
-RUN apt-get update -q && \
-    apt-get install -qy \
+ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -qy
+RUN TZ=Europe/Warsaw apt-get -y install tzdata
+
+RUN apt-get install -qy \
         git \
         wget \
         make \
