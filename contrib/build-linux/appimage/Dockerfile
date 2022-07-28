@@ -1,4 +1,4 @@
-FROM ubuntu:20.04.4
+FROM ubuntu:20.04
 
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
 
