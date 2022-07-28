@@ -3,6 +3,7 @@
 set -e
 
 git config --global --add safe.directory /opt/electrum
+git config --global --add safe.directory /opt/electrum/electrum/www
 
 PROJECT_ROOT="$(dirname "$(readlink -e "$0")")/../../.."
 CONTRIB="$PROJECT_ROOT/contrib"
