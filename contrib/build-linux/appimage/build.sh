@@ -2,6 +2,8 @@
 
 set -e
 
+git config --global --add safe.directory /opt/electrum
+
 PROJECT_ROOT="$(dirname "$(readlink -e "$0")")/../../.."
 CONTRIB="$PROJECT_ROOT/contrib"
 CONTRIB_APPIMAGE="$CONTRIB/build-linux/appimage"
