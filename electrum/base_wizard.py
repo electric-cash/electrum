@@ -222,6 +222,7 @@ class BaseWizard(Logger):
                 ('choose_hw_device', _('Cosign with hardware device')),
             ]
 
+
         self.choice_dialog(title=title, message=message, choices=choices, run_next=self.run)
 
     def import_addresses_or_keys(self):
