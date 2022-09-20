@@ -174,6 +174,7 @@ info "Faking timestamps..."
 find . -exec touch -t '200101220000' {} + || true
 
 VERSION=`git describe --tags --dirty --always`
+export VERSION
 
 info "Building binary"
 pyinstaller --noconfirm --ascii --clean contrib/osx/osx.spec || fail "Could not build binary"

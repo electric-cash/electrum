@@ -19,7 +19,7 @@ SQUASHFSKIT_COMMIT="ae0d656efa2d0df2fcac795b6823b44462f19386"
 
 
 VERSION=`git describe --tags --dirty --always`
-export VERSION
+
 APPIMAGE="$DISTDIR/elcash-wallet-$VERSION-x86_64.AppImage"
 
 . "$CONTRIB"/build_tools_util.sh
