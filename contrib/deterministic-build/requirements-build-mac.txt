@@ -42,7 +42,7 @@ macholib==1.14 \
 pip==21.0.1 \
     --hash=sha256:37fd50e056e2aed635dec96594606f0286640489b0db0ce7607f7e51890372d5 \
     --hash=sha256:99bbde183ec5ec037318e774b0d8ae0a64352fe53b2c7fd630be1d07e94f41e5
-PyInstaller==4.4 \
+PyInstaller==5.4.1 \
     --hash=sha256:b0f13d0a33b9a21659967db65b475c14645b456dc70ba68fa9cebf4bc29ef58e \
     --hash=sha256:af3ef0b9f265a2d3859357a25ab16743fbb6143c89fd7c3570cb84b8d24db0ba
 pyinstaller-hooks-contrib==2021.1 \
