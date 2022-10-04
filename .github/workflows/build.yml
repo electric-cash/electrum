@@ -122,4 +122,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: artifact-macos
-          path: dist/*.dmg
+          path: dist/*
