@@ -196,8 +196,8 @@ plutil -insert 'CFBundleURLTypes' \
 #     fi
 # fi
 
-info "Creating .DMG"
-hdiutil create -fs HFS+ -volname $PACKAGE -srcfolder dist/$PACKAGE.app dist/electrum-$VERSION.dmg || fail "Could not create .DMG"
+#info "Creating .DMG"
+#hdiutil create -fs HFS+ -volname $PACKAGE -srcfolder dist/$PACKAGE.app dist/electrum-$VERSION.dmg || fail "Could not create .DMG"
 
 # DoCodeSignMaybe ".DMG" "dist/electrum-${VERSION}.dmg"
 
